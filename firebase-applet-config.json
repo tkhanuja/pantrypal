@@ -3,7 +3,7 @@
   "appId": "1:557285061653:web:d777e9405d61032bab8a1c",
   "apiKey": "AIzaSyAO3xx6mnITcD9h6GDk7qhzpQMvSiswSVk",
   "authDomain": "pantry-pal-66ed8.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-pantrypal-50d5c7a3-c7a4-4b0d-ac5e-8abe633050a0",
+  "firestoreDatabaseId": "default",
   "storageBucket": "pantry-pal-66ed8.firebasestorage.app",
   "messagingSenderId": "557285061653",
   "measurementId": "G-MM184JNZ75",

@@ -1,28 +1,22 @@
-import React, { useEffect, useState } from "react";
-import {
-  UserProfile,
-  AdHocOverride,
-  Recipe,
-  MealPlanEntry,
-  PantryItem,
-} from "./types";
+import React, { useEffect, useState } from 'react';
+import { UserProfile, AdHocOverride, Recipe, MealPlanEntry, PantryItem } from './types';
 import {
   DEFAULT_PROFILES,
   INITIAL_AD_HOC_OVERRIDE,
   INITIAL_SAVED_RECIPES,
   INITIAL_PANTRY_ITEMS,
   INITIAL_MEAL_PLAN,
-} from "./data/initialData";
-import { Navbar, ActiveTab } from "./components/Navbar";
-import { ChatInterface } from "./components/ChatInterface";
-import { ProfileSettings } from "./components/ProfileSettings";
-import { RecipeBook } from "./components/RecipeBook";
-import { MealPlanner } from "./components/MealPlanner";
-import { PantryInventory } from "./components/PantryInventory";
-import { AdHocOverrideModal } from "./components/AdHocOverrideModal";
-import { AuthModal } from "./components/AuthModal";
-import { auth } from "./lib/firebase";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
+} from './data/initialData';
+import { Navbar, ActiveTab } from './components/Navbar';
+import { ChatInterface } from './components/ChatInterface';
+import { ProfileSettings } from './components/ProfileSettings';
+import { RecipeBook } from './components/RecipeBook';
+import { MealPlanner } from './components/MealPlanner';
+import { PantryInventory } from './components/PantryInventory';
+import { AdHocOverrideModal } from './components/AdHocOverrideModal';
+import { AuthModal } from './components/AuthModal';
+import { auth } from './lib/firebase';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import {
   subscribeToUserRecipes,
   saveRecipeToFirestore,
@@ -37,21 +31,17 @@ import {
   getUserProfileFromFirestore,
   saveAdHocOverrideToFirestore,
   getAdHocOverrideFromFirestore,
-} from "./services/firestoreService";
+} from './services/firestoreService';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("chat");
+  const [activeTab, setActiveTab] = useState<ActiveTab>('chat');
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // User-scoped state initialized without localStorage reliance
   const [profiles, setProfiles] = useState<UserProfile[]>(DEFAULT_PROFILES);
-  const [currentProfile, setCurrentProfile] = useState<UserProfile>(
-    DEFAULT_PROFILES[0],
-  );
-  const [adHocOverride, setAdHocOverride] = useState<AdHocOverride>(
-    INITIAL_AD_HOC_OVERRIDE,
-  );
+  const [currentProfile, setCurrentProfile] = useState<UserProfile>(DEFAULT_PROFILES[0]);
+  const [adHocOverride, setAdHocOverride] = useState<AdHocOverride>(INITIAL_AD_HOC_OVERRIDE);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const [mealPlan, setMealPlan] = useState<MealPlanEntry[]>([]);
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
@@ -67,18 +57,9 @@ export default function App() {
       setAuthUser(user);
 
       // Clean up prior subscriptions
-      if (unsubRecipes) {
-        unsubRecipes();
-        unsubRecipes = null;
-      }
-      if (unsubMealPlan) {
-        unsubMealPlan();
-        unsubMealPlan = null;
-      }
-      if (unsubPantry) {
-        unsubPantry();
-        unsubPantry = null;
-      }
+      if (unsubRecipes) { unsubRecipes(); unsubRecipes = null; }
+      if (unsubMealPlan) { unsubMealPlan(); unsubMealPlan = null; }
+      if (unsubPantry) { unsubPantry(); unsubPantry = null; }
 
       if (user) {
         // Synchronize Firestore data for the logged-in user under users/{user.uid}/...
@@ -87,14 +68,11 @@ export default function App() {
           setCurrentProfile(firestoreProfile);
         } else {
           // Initialize and save profile settings under users/{user.uid}/profile/settings
-          const defaultProf =
-            profiles.find((p) => p.name === "Balanced") ||
-            profiles[0] ||
-            DEFAULT_PROFILES[0];
+          const defaultProf = profiles.find((p) => p.name === 'Balanced') || profiles[0] || DEFAULT_PROFILES[0];
           const initialUserProf: UserProfile = {
             ...defaultProf,
             id: user.uid,
-            email: user.email || "user@pantrypal.app",
+            email: user.email || 'user@pantrypal.app',
           };
           saveUserProfileToFirestore(user.uid, initialUserProf);
           setCurrentProfile(initialUserProf);
@@ -148,13 +126,9 @@ export default function App() {
     saveRecipeToFirestore(currentUserId, recipe);
 
     setSavedRecipes((prev) => {
-      const exists = prev.some(
-        (r) => r.id === recipe.id || r.title === recipe.title,
-      );
+      const exists = prev.some((r) => r.id === recipe.id || r.title === recipe.title);
       if (exists) {
-        return prev.map((r) =>
-          r.id === recipe.id || r.title === recipe.title ? recipe : r,
-        );
+        return prev.map((r) => (r.id === recipe.id || r.title === recipe.title ? recipe : r));
       }
       return [recipe, ...prev];
     });
@@ -178,9 +152,7 @@ export default function App() {
     }
 
     const currentUserId = auth.currentUser.uid;
-    setProfiles((prev) =>
-      prev.map((p) => (p.id === updatedProfile.id ? updatedProfile : p)),
-    );
+    setProfiles((prev) => prev.map((p) => (p.id === updatedProfile.id ? updatedProfile : p)));
     setCurrentProfile(updatedProfile);
     saveUserProfileToFirestore(currentUserId, updatedProfile);
   };
@@ -224,11 +196,7 @@ export default function App() {
     saveMealPlanEntryToFirestore(currentUserId, entry);
   };
 
-  const handleScheduleRecipe = (
-    recipe: Recipe,
-    selectedDays: string[],
-    mealType: string,
-  ) => {
+  const handleScheduleRecipe = (recipe: Recipe, selectedDays: string[], mealType: string) => {
     if (!auth.currentUser) {
       setIsAuthModalOpen(true);
       return;
@@ -299,7 +267,7 @@ export default function App() {
   };
 
   const handleCookWithPantry = (selectedIngredients: string[]) => {
-    setActiveTab("chat");
+    setActiveTab('chat');
   };
 
   return (
@@ -321,7 +289,7 @@ export default function App() {
 
       {/* Main Tab Content */}
       <main className="pb-12">
-        {activeTab === "chat" && (
+        {activeTab === 'chat' && (
           <ChatInterface
             userProfile={currentProfile}
             adHocOverride={adHocOverride}
@@ -329,7 +297,7 @@ export default function App() {
             onSaveRecipe={handleSaveRecipe}
             savedRecipes={savedRecipes}
             onAddToMealPlan={(rec) => {
-              handleScheduleRecipe(rec, ["Monday"], "Dinner");
+              handleScheduleRecipe(rec, ['Monday'], 'Dinner');
             }}
             onScheduleRecipe={handleScheduleRecipe}
             authUser={authUser}
@@ -337,14 +305,14 @@ export default function App() {
           />
         )}
 
-        {activeTab === "recipe_book" && (
+        {activeTab === 'recipe_book' && (
           <RecipeBook
             recipes={savedRecipes}
             userProfile={currentProfile}
             onDeleteRecipe={handleDeleteRecipe}
             onSaveRecipe={handleSaveRecipe}
             onAddToMealPlan={(rec) => {
-              handleScheduleRecipe(rec, ["Monday"], "Dinner");
+              handleScheduleRecipe(rec, ['Monday'], 'Dinner');
             }}
             onScheduleRecipe={handleScheduleRecipe}
             authUser={authUser}
@@ -352,7 +320,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === "profile" && (
+        {activeTab === 'profile' && (
           <ProfileSettings
             profiles={profiles}
             currentProfile={currentProfile}
@@ -365,7 +333,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === "planner" && (
+        {activeTab === 'planner' && (
           <MealPlanner
             mealPlan={mealPlan}
             savedRecipes={savedRecipes}
@@ -376,7 +344,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === "pantry" && (
+        {activeTab === 'pantry' && (
           <PantryInventory
             items={pantryItems}
             onAddItem={handleAddPantryItem}
@@ -404,3 +372,4 @@ export default function App() {
     </div>
   );
 }
+

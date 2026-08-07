@@ -1,21 +1,10 @@
-import React from "react";
-import { Recipe, UserProfile } from "../types";
-import { RecipeCardView } from "./RecipeCardView";
-import { getFoodPhotoFallback } from "../lib/foodPhotos";
-import { ScheduleModal } from "./ScheduleModal";
-import {
-  BookOpen,
-  Search,
-  Sparkles,
-  Trash2,
-  Eye,
-  CalendarPlus,
-  X,
-  Filter,
-  Lock,
-  LogIn,
-} from "lucide-react";
-import { User } from "firebase/auth";
+import React from 'react';
+import { Recipe, UserProfile } from '../types';
+import { RecipeCardView } from './RecipeCardView';
+import { getFoodPhotoFallback } from '../lib/foodPhotos';
+import { ScheduleModal } from './ScheduleModal';
+import { BookOpen, Search, Sparkles, Trash2, Eye, CalendarPlus, X, Filter, Lock, LogIn } from 'lucide-react';
+import { User } from 'firebase/auth';
 
 interface Props {
   recipes: Recipe[];
@@ -23,11 +12,7 @@ interface Props {
   onDeleteRecipe: (recipeId: string) => void;
   onSaveRecipe: (recipe: Recipe) => void;
   onAddToMealPlan: (recipe: Recipe) => void;
-  onScheduleRecipe?: (
-    recipe: Recipe,
-    selectedDays: string[],
-    mealType: string,
-  ) => void;
+  onScheduleRecipe?: (recipe: Recipe, selectedDays: string[], mealType: string) => void;
   authUser: User | null;
   onOpenAuthModal: () => void;
 }
@@ -42,26 +27,20 @@ export const RecipeBook: React.FC<Props> = ({
   authUser,
   onOpenAuthModal,
 }) => {
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [selectedTag, setSelectedTag] = React.useState<string>("All");
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [selectedTag, setSelectedTag] = React.useState<string>('All');
   const [maxCalories, setMaxCalories] = React.useState<number>(1000);
   const [minProtein, setMinProtein] = React.useState<number>(0);
   const [maxCookTime, setMaxCookTime] = React.useState<number>(90);
-  const [sortBy, setSortBy] = React.useState<
-    "newest" | "protein" | "calories" | "time"
-  >("newest");
-  const [selectedRecipe, setSelectedRecipe] = React.useState<Recipe | null>(
-    null,
-  );
-  const [schedulingRecipe, setSchedulingRecipe] = React.useState<Recipe | null>(
-    null,
-  );
+  const [sortBy, setSortBy] = React.useState<'newest' | 'protein' | 'calories' | 'time'>('newest');
+  const [selectedRecipe, setSelectedRecipe] = React.useState<Recipe | null>(null);
+  const [schedulingRecipe, setSchedulingRecipe] = React.useState<Recipe | null>(null);
 
   // Collect all unique tags
   const allTags = React.useMemo(() => {
     const set = new Set<string>();
     recipes.forEach((r) => (r.dietaryTags || []).forEach((t) => set.add(t)));
-    return ["All", ...Array.from(set)];
+    return ['All', ...Array.from(set)];
   }, [recipes]);
 
   // Filter & Sort Logic (Phase 2 Roadmap)
@@ -71,12 +50,9 @@ export const RecipeBook: React.FC<Props> = ({
         const matchesSearch =
           r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           r.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (r.ingredients || []).some((ing) =>
-            ing.item.toLowerCase().includes(searchQuery.toLowerCase()),
-          );
+          (r.ingredients || []).some((ing) => ing.item.toLowerCase().includes(searchQuery.toLowerCase()));
 
-        const matchesTag =
-          selectedTag === "All" || (r.dietaryTags || []).includes(selectedTag);
+        const matchesTag = selectedTag === 'All' || (r.dietaryTags || []).includes(selectedTag);
 
         const calories = r.nutritionMacros?.calories || 0;
         const protein = r.nutritionMacros?.protein || 0;
@@ -86,48 +62,21 @@ export const RecipeBook: React.FC<Props> = ({
         const matchesProt = protein >= minProtein;
         const matchesTime = totalTime <= maxCookTime;
 
-        return (
-          matchesSearch &&
-          matchesTag &&
-          matchesCal &&
-          matchesProt &&
-          matchesTime
-        );
+        return matchesSearch && matchesTag && matchesCal && matchesProt && matchesTime;
       })
       .sort((a, b) => {
-        if (sortBy === "protein") {
-          return (
-            (b.nutritionMacros?.protein || 0) -
-            (a.nutritionMacros?.protein || 0)
-          );
+        if (sortBy === 'protein') {
+          return (b.nutritionMacros?.protein || 0) - (a.nutritionMacros?.protein || 0);
         }
-        if (sortBy === "calories") {
-          return (
-            (a.nutritionMacros?.calories || 0) -
-            (b.nutritionMacros?.calories || 0)
-          );
+        if (sortBy === 'calories') {
+          return (a.nutritionMacros?.calories || 0) - (b.nutritionMacros?.calories || 0);
         }
-        if (sortBy === "time") {
-          return (
-            (a.prepTime || 0) +
-            (a.cookTime || 0) -
-            ((b.prepTime || 0) + (b.cookTime || 0))
-          );
+        if (sortBy === 'time') {
+          return ((a.prepTime || 0) + (a.cookTime || 0)) - ((b.prepTime || 0) + (b.cookTime || 0));
         }
-        return (
-          new Date(b.createdAt || 0).getTime() -
-          new Date(a.createdAt || 0).getTime()
-        );
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       });
-  }, [
-    recipes,
-    searchQuery,
-    selectedTag,
-    maxCalories,
-    minProtein,
-    maxCookTime,
-    sortBy,
-  ]);
+  }, [recipes, searchQuery, selectedTag, maxCalories, minProtein, maxCookTime, sortBy]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -138,13 +87,8 @@ export const RecipeBook: React.FC<Props> = ({
               <Lock className="w-4 h-4" />
             </div>
             <div>
-              <span className="font-bold text-[#1C1C1C]">
-                Authentication Required for Recipe Book:
-              </span>
-              <span className="text-[#575752] ml-1">
-                Sign in or create an account to save recipes, sync with Cloud
-                Firestore, and build your personalized collection.
-              </span>
+              <span className="font-bold text-[#1C1C1C]">Authentication Required for Recipe Book:</span>
+              <span className="text-[#575752] ml-1">Sign in or create an account to save recipes, sync with Cloud Firestore, and build your personalized collection.</span>
             </div>
           </div>
           <button
@@ -165,12 +109,9 @@ export const RecipeBook: React.FC<Props> = ({
               <BookOpen className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="serif-heading text-2xl font-bold tracking-tight">
-                Personal Saved Recipe Book
-              </h2>
+              <h2 className="serif-heading text-2xl font-bold tracking-tight">Personal Saved Recipe Book</h2>
               <p className="text-xs text-[#E8E6DC] font-sans">
-                Stored culinary collection with macro breakdowns & personalized
-                filtering
+                Stored culinary collection with macro breakdowns & personalized filtering
               </p>
             </div>
           </div>
@@ -195,17 +136,15 @@ export const RecipeBook: React.FC<Props> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-bold text-amber-200 uppercase tracking-wider">
-              Tag Filter:
-            </span>
+            <span className="text-[11px] font-bold text-amber-200 uppercase tracking-wider">Tag Filter:</span>
             {allTags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag)}
                 className={`px-3 py-1 rounded-xl text-xs font-semibold transition ${
                   selectedTag === tag
-                    ? "bg-white text-[#5A5A40] font-bold shadow-xs"
-                    : "bg-white/15 text-white hover:bg-white/25"
+                    ? 'bg-white text-[#5A5A40] font-bold shadow-xs'
+                    : 'bg-white/15 text-white hover:bg-white/25'
                 }`}
               >
                 {tag}
@@ -242,9 +181,7 @@ export const RecipeBook: React.FC<Props> = ({
           <div>
             <div className="flex justify-between font-semibold text-[#575752] mb-1">
               <span>Max Calories:</span>
-              <span className="font-bold text-[#5A5A40]">
-                {maxCalories} kcal
-              </span>
+              <span className="font-bold text-[#5A5A40]">{maxCalories} kcal</span>
             </div>
             <input
               type="range"
@@ -276,9 +213,7 @@ export const RecipeBook: React.FC<Props> = ({
           <div>
             <div className="flex justify-between font-semibold text-[#575752] mb-1">
               <span>Max Total Prep+Cook:</span>
-              <span className="font-bold text-[#D47A5F]">
-                {maxCookTime} mins
-              </span>
+              <span className="font-bold text-[#D47A5F]">{maxCookTime} mins</span>
             </div>
             <input
               type="range"
@@ -298,14 +233,12 @@ export const RecipeBook: React.FC<Props> = ({
         <div className="bg-white rounded-3xl p-12 text-center border border-[#E5E3D8] shadow-xs space-y-4">
           <BookOpen className="w-12 h-12 text-[#88886C] mx-auto" />
           <h3 className="serif-heading text-xl font-bold text-[#1C1C1C]">
-            {!authUser
-              ? "Sign In to View & Save Recipes"
-              : "No Saved Recipes Found"}
+            {!authUser ? 'Sign In to View & Save Recipes' : 'No Saved Recipes Found'}
           </h3>
           <p className="text-xs text-[#575752] max-w-md mx-auto leading-relaxed">
             {!authUser
-              ? "Recipe saving and cloud synchronization require an authenticated account. Sign in or create an account to start saving recipes to Cloud Firestore."
-              : "Try adjusting your search query or threshold filters above, or generate new recipes with the AI Chef Chat!"}
+              ? 'Recipe saving and cloud synchronization require an authenticated account. Sign in or create an account to start saving recipes to Cloud Firestore.'
+              : 'Try adjusting your search query or threshold filters above, or generate new recipes with the AI Chef Chat!'}
           </p>
           {!authUser && (
             <button
@@ -327,21 +260,13 @@ export const RecipeBook: React.FC<Props> = ({
               {/* Image Banner */}
               <div className="relative h-48 w-full bg-[#1C1C1C] overflow-hidden">
                 <img
-                  src={
-                    rec.imageUrl &&
-                    !rec.imageUrl.includes("photo-1546069901-ba9599a7e63c")
-                      ? rec.imageUrl
-                      : getFoodPhotoFallback(rec.title, rec.description)
-                  }
+                  src={(rec.imageUrl && !rec.imageUrl.includes('photo-1546069901-ba9599a7e63c')) ? rec.imageUrl : getFoodPhotoFallback(rec.title, rec.description)}
                   alt={rec.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     const target = e.currentTarget as HTMLImageElement;
-                    const fallback = getFoodPhotoFallback(
-                      rec.title,
-                      rec.description,
-                    );
+                    const fallback = getFoodPhotoFallback(rec.title, rec.description);
                     if (target.src !== fallback) {
                       target.src = fallback;
                     }
@@ -352,10 +277,7 @@ export const RecipeBook: React.FC<Props> = ({
                 {/* Top Tags */}
                 <div className="absolute top-3 left-3 flex flex-wrap gap-1">
                   {(rec.dietaryTags || []).slice(0, 2).map((tag, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-0.5 bg-white/90 text-[#1C1C1C] text-[10px] font-bold rounded-md shadow-2xs"
-                    >
+                    <span key={i} className="px-2 py-0.5 bg-white/90 text-[#1C1C1C] text-[10px] font-bold rounded-md shadow-2xs">
                       {tag}
                     </span>
                   ))}
@@ -363,43 +285,27 @@ export const RecipeBook: React.FC<Props> = ({
 
                 {/* Bottom Overlay Title */}
                 <div className="absolute bottom-3 left-3 right-3 text-white">
-                  <h3 className="serif-heading font-bold text-lg leading-tight drop-shadow-md">
-                    {rec.title}
-                  </h3>
+                  <h3 className="serif-heading font-bold text-lg leading-tight drop-shadow-md">{rec.title}</h3>
                 </div>
               </div>
 
               {/* Body Details */}
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                <p className="text-xs text-[#575752] line-clamp-2 leading-relaxed">
-                  {rec.description}
-                </p>
+                <p className="text-xs text-[#575752] line-clamp-2 leading-relaxed">{rec.description}</p>
 
                 {/* Macro Pills Bar */}
                 <div className="grid grid-cols-3 gap-2 bg-[#FAF9F5] p-2.5 rounded-2xl border border-[#E5E3D8] text-center">
                   <div>
-                    <span className="text-[10px] font-bold text-[#88886C] block uppercase">
-                      Cal
-                    </span>
-                    <span className="text-xs font-extrabold text-[#1C1C1C]">
-                      {rec.nutritionMacros?.calories || 400}
-                    </span>
+                    <span className="text-[10px] font-bold text-[#88886C] block uppercase">Cal</span>
+                    <span className="text-xs font-extrabold text-[#1C1C1C]">{rec.nutritionMacros?.calories || 400}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-[#88886C] block uppercase">
-                      Protein
-                    </span>
-                    <span className="text-xs font-extrabold text-[#5A5A40]">
-                      {rec.nutritionMacros?.protein || 30}g
-                    </span>
+                    <span className="text-[10px] font-bold text-[#88886C] block uppercase">Protein</span>
+                    <span className="text-xs font-extrabold text-[#5A5A40]">{rec.nutritionMacros?.protein || 30}g</span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-[#88886C] block uppercase">
-                      Prep
-                    </span>
-                    <span className="text-xs font-extrabold text-[#D47A5F]">
-                      {(rec.prepTime || 10) + (rec.cookTime || 15)}m
-                    </span>
+                    <span className="text-[10px] font-bold text-[#88886C] block uppercase">Prep</span>
+                    <span className="text-xs font-extrabold text-[#D47A5F]">{(rec.prepTime || 10) + (rec.cookTime || 15)}m</span>
                   </div>
                 </div>
 

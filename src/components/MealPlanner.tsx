@@ -1,20 +1,8 @@
-import React from "react";
-import { MealPlanEntry, Recipe } from "../types";
-import { getFoodPhotoFallback } from "../lib/foodPhotos";
-import {
-  Calendar,
-  ShoppingBag,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  Flame,
-  Sparkles,
-  X,
-  ChevronRight,
-  LogIn,
-  Lock,
-} from "lucide-react";
-import { User } from "firebase/auth";
+import React from 'react';
+import { MealPlanEntry, Recipe } from '../types';
+import { getFoodPhotoFallback } from '../lib/foodPhotos';
+import { Calendar, ShoppingBag, Plus, Trash2, CheckCircle2, Flame, Sparkles, X, ChevronRight, LogIn, Lock } from 'lucide-react';
+import { User } from 'firebase/auth';
 
 interface Props {
   mealPlan: MealPlanEntry[];
@@ -25,16 +13,8 @@ interface Props {
   onOpenAuthModal: () => void;
 }
 
-const DAYS_OF_WEEK = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-] as const;
-const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"] as const;
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
+const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const;
 
 interface GroceryItem {
   item: string;
@@ -50,19 +30,12 @@ export const MealPlanner: React.FC<Props> = ({
   authUser,
   onOpenAuthModal,
 }) => {
-  const [selectedDay, setSelectedDay] =
-    React.useState<(typeof DAYS_OF_WEEK)[number]>("Monday");
+  const [selectedDay, setSelectedDay] = React.useState<typeof DAYS_OF_WEEK[number]>('Monday');
   const [addModalOpen, setAddModalOpen] = React.useState(false);
-  const [modalMealType, setModalMealType] =
-    React.useState<(typeof MEAL_TYPES)[number]>("Breakfast");
-  const [shoppingListChecked, setShoppingListChecked] = React.useState<
-    Record<string, boolean>
-  >({});
+  const [modalMealType, setModalMealType] = React.useState<typeof MEAL_TYPES[number]>('Breakfast');
+  const [shoppingListChecked, setShoppingListChecked] = React.useState<Record<string, boolean>>({});
 
-  const handleOpenAdd = (
-    day: (typeof DAYS_OF_WEEK)[number],
-    type: (typeof MEAL_TYPES)[number],
-  ) => {
+  const handleOpenAdd = (day: typeof DAYS_OF_WEEK[number], type: typeof MEAL_TYPES[number]) => {
     if (!authUser) {
       onOpenAuthModal();
       return;
@@ -84,20 +57,16 @@ export const MealPlanner: React.FC<Props> = ({
   };
 
   // Consolidated Grocery List Calculation
-  const groceryListByCategory = React.useMemo<
-    Record<string, GroceryItem[]>
-  >(() => {
+  const groceryListByCategory = React.useMemo<Record<string, GroceryItem[]>>(() => {
     const categories: Record<string, GroceryItem[]> = {};
 
     mealPlan.forEach((mp) => {
       (mp.recipe.ingredients || []).forEach((ing) => {
-        const cat = ing.category || "Pantry & Spices";
+        const cat = ing.category || 'Pantry & Spices';
         if (!categories[cat]) categories[cat] = [];
 
         const existing = categories[cat].find(
-          (i) =>
-            i.item.toLowerCase() === ing.item.toLowerCase() &&
-            i.unit === ing.unit,
+          (i) => i.item.toLowerCase() === ing.item.toLowerCase() && i.unit === ing.unit
         );
         if (existing) {
           existing.totalAmount += ing.amount || 1;
@@ -105,7 +74,7 @@ export const MealPlanner: React.FC<Props> = ({
           categories[cat].push({
             item: ing.item,
             totalAmount: ing.amount || 1,
-            unit: ing.unit || "",
+            unit: ing.unit || '',
           });
         }
       });
@@ -147,13 +116,8 @@ export const MealPlanner: React.FC<Props> = ({
               <Lock className="w-4 h-4" />
             </div>
             <div>
-              <span className="font-bold text-[#1C1C1C]">
-                Authentication Required for Meal Planning:
-              </span>
-              <span className="text-[#575752] ml-1">
-                Sign in or create an account to schedule meals and sync your
-                weekly plan with Cloud Firestore.
-              </span>
+              <span className="font-bold text-[#1C1C1C]">Authentication Required for Meal Planning:</span>
+              <span className="text-[#575752] ml-1">Sign in or create an account to schedule meals and sync your weekly plan with Cloud Firestore.</span>
             </div>
           </div>
           <button
@@ -174,32 +138,21 @@ export const MealPlanner: React.FC<Props> = ({
               <Calendar className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="serif-heading text-2xl font-bold tracking-tight">
-                Automated Weekly Meal Planner
-              </h2>
+              <h2 className="serif-heading text-2xl font-bold tracking-tight">Automated Weekly Meal Planner</h2>
               <p className="text-xs text-[#E8E6DC] font-sans">
-                Coordinate weekly macro distributions & generate consolidated
-                grocery lists
+                Coordinate weekly macro distributions & generate consolidated grocery lists
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3 bg-white/15 px-4 py-2 rounded-2xl border border-white/20 text-xs font-bold">
             <div>
-              <span className="text-amber-200 block text-[10px] uppercase">
-                Weekly Avg
-              </span>
-              <span className="text-white font-extrabold text-sm">
-                {weeklyTotals.avgDailyCal} kcal / day
-              </span>
+              <span className="text-amber-200 block text-[10px] uppercase">Weekly Avg</span>
+              <span className="text-white font-extrabold text-sm">{weeklyTotals.avgDailyCal} kcal / day</span>
             </div>
             <div className="border-l border-white/20 pl-3">
-              <span className="text-amber-200 block text-[10px] uppercase">
-                Protein
-              </span>
-              <span className="text-amber-200 font-extrabold text-sm">
-                {weeklyTotals.avgDailyProtein}g / day
-              </span>
+              <span className="text-amber-200 block text-[10px] uppercase">Protein</span>
+              <span className="text-amber-200 font-extrabold text-sm">{weeklyTotals.avgDailyProtein}g / day</span>
             </div>
           </div>
         </div>
@@ -212,22 +165,14 @@ export const MealPlanner: React.FC<Props> = ({
             const dayEntries = mealPlan.filter((mp) => mp.dayOfWeek === day);
 
             return (
-              <div
-                key={day}
-                className="bg-white rounded-3xl border border-[#E5E3D8] shadow-xs p-5 space-y-3"
-              >
+              <div key={day} className="bg-white rounded-3xl border border-[#E5E3D8] shadow-xs p-5 space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-[#E5E3D8]">
                   <h3 className="serif-heading text-base font-bold text-[#1C1C1C] flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#5A5A40]"></span>
                     {day}
                   </h3>
                   <span className="text-xs font-bold text-[#575752]">
-                    {dayEntries.reduce(
-                      (sum, e) =>
-                        sum + (e.recipe.nutritionMacros?.calories || 0),
-                      0,
-                    )}{" "}
-                    kcal
+                    {dayEntries.reduce((sum, e) => sum + (e.recipe.nutritionMacros?.calories || 0), 0)} kcal
                   </span>
                 </div>
 
@@ -240,8 +185,8 @@ export const MealPlanner: React.FC<Props> = ({
                         key={type}
                         className={`p-3 rounded-2xl border transition flex flex-col justify-between min-h-[90px] ${
                           entry
-                            ? "bg-[#FAF9F5] border-[#5A5A40]/30 text-[#1C1C1C]"
-                            : "bg-[#F5F5F0] border-dashed border-[#E5E3D8] text-[#88886C] hover:border-[#5A5A40]/50 hover:bg-white"
+                            ? 'bg-[#FAF9F5] border-[#5A5A40]/30 text-[#1C1C1C]'
+                            : 'bg-[#F5F5F0] border-dashed border-[#E5E3D8] text-[#88886C] hover:border-[#5A5A40]/50 hover:bg-white'
                         }`}
                       >
                         <div className="flex items-center justify-between text-[11px] font-bold text-[#88886C] uppercase">
@@ -258,12 +203,9 @@ export const MealPlanner: React.FC<Props> = ({
 
                         {entry ? (
                           <div className="mt-1.5">
-                            <p className="text-xs font-bold text-[#1C1C1C] line-clamp-1">
-                              {entry.recipe.title}
-                            </p>
+                            <p className="text-xs font-bold text-[#1C1C1C] line-clamp-1">{entry.recipe.title}</p>
                             <span className="text-[10px] text-[#5A5A40] font-semibold block mt-0.5">
-                              {entry.recipe.nutritionMacros?.calories} kcal |{" "}
-                              {entry.recipe.nutritionMacros?.protein}g protein
+                              {entry.recipe.nutritionMacros?.calories} kcal | {entry.recipe.nutritionMacros?.protein}g protein
                             </span>
                           </div>
                         ) : (
@@ -292,9 +234,7 @@ export const MealPlanner: React.FC<Props> = ({
                 <h3 className="serif-heading text-base font-bold text-[#1C1C1C]">
                   Consolidated Grocery List
                 </h3>
-                <p className="text-[11px] text-[#575752]">
-                  Auto-aggregated from weekly planned meals
-                </p>
+                <p className="text-[11px] text-[#575752]">Auto-aggregated from weekly planned meals</p>
               </div>
             </div>
           </div>
@@ -302,19 +242,11 @@ export const MealPlanner: React.FC<Props> = ({
           {Object.keys(groceryListByCategory).length === 0 ? (
             <div className="text-center py-8 text-[#88886C] space-y-2">
               <ShoppingBag className="w-8 h-8 mx-auto" />
-              <p className="text-xs">
-                Add recipes to your weekly calendar to auto-generate a shopping
-                list!
-              </p>
+              <p className="text-xs">Add recipes to your weekly calendar to auto-generate a shopping list!</p>
             </div>
           ) : (
             <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-              {(
-                Object.entries(groceryListByCategory) as [
-                  string,
-                  GroceryItem[],
-                ][]
-              ).map(([cat, items]) => (
+              {(Object.entries(groceryListByCategory) as [string, GroceryItem[]][]).map(([cat, items]) => (
                 <div key={cat} className="space-y-2">
                   <h4 className="text-xs font-bold text-[#5A5A40] uppercase tracking-wider bg-[#5A5A40]/10 px-2.5 py-1 rounded-lg">
                     {cat}
@@ -328,24 +260,17 @@ export const MealPlanner: React.FC<Props> = ({
                         <li
                           key={idx}
                           onClick={() =>
-                            setShoppingListChecked((prev) => ({
-                              ...prev,
-                              [itemKey]: !prev[itemKey],
-                            }))
+                            setShoppingListChecked((prev) => ({ ...prev, [itemKey]: !prev[itemKey] }))
                           }
                           className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${
-                            isChecked
-                              ? "bg-[#F5F5F0] text-[#88886C] line-through"
-                              : "bg-white border-[#E5E3D8] hover:bg-[#FAF9F5]"
+                            isChecked ? 'bg-[#F5F5F0] text-[#88886C] line-through' : 'bg-white border-[#E5E3D8] hover:bg-[#FAF9F5]'
                           }`}
                         >
                           <div className="flex items-center gap-2">
                             <CheckCircle2
-                              className={`w-4 h-4 ${isChecked ? "text-[#5A5A40] fill-[#5A5A40]/20" : "text-[#88886C]"}`}
+                              className={`w-4 h-4 ${isChecked ? 'text-[#5A5A40] fill-[#5A5A40]/20' : 'text-[#88886C]'}`}
                             />
-                            <span className="font-semibold text-[#1C1C1C]">
-                              {ing.item}
-                            </span>
+                            <span className="font-semibold text-[#1C1C1C]">{ing.item}</span>
                           </div>
                           <span className="font-bold text-[#5A5A40]">
                             {Math.round(ing.totalAmount * 10) / 10} {ing.unit}
@@ -370,14 +295,9 @@ export const MealPlanner: React.FC<Props> = ({
                 <h3 className="text-base font-bold">
                   Add Recipe to {selectedDay} ({modalMealType})
                 </h3>
-                <p className="text-xs text-slate-400">
-                  Choose from your personal Recipe Book
-                </p>
+                <p className="text-xs text-slate-400">Choose from your personal Recipe Book</p>
               </div>
-              <button
-                onClick={() => setAddModalOpen(false)}
-                className="text-slate-400 hover:text-white"
-              >
+              <button onClick={() => setAddModalOpen(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -385,8 +305,7 @@ export const MealPlanner: React.FC<Props> = ({
             <div className="p-4 overflow-y-auto space-y-2">
               {savedRecipes.length === 0 ? (
                 <p className="text-xs text-slate-500 text-center py-6">
-                  No saved recipes in your book yet. Save some recipes from AI
-                  Chef Chat first!
+                  No saved recipes in your book yet. Save some recipes from AI Chef Chat first!
                 </p>
               ) : (
                 savedRecipes.map((recipe) => (
@@ -397,38 +316,22 @@ export const MealPlanner: React.FC<Props> = ({
                   >
                     <div className="flex items-center gap-3">
                       <img
-                        src={
-                          recipe.imageUrl &&
-                          !recipe.imageUrl.includes(
-                            "photo-1546069901-ba9599a7e63c",
-                          )
-                            ? recipe.imageUrl
-                            : getFoodPhotoFallback(
-                                recipe.title,
-                                recipe.description,
-                              )
-                        }
+                        src={(recipe.imageUrl && !recipe.imageUrl.includes('photo-1546069901-ba9599a7e63c')) ? recipe.imageUrl : getFoodPhotoFallback(recipe.title, recipe.description)}
                         alt={recipe.title}
                         className="w-10 h-10 rounded-lg object-cover"
                         referrerPolicy="no-referrer"
                         onError={(e) => {
                           const target = e.currentTarget as HTMLImageElement;
-                          const fallback = getFoodPhotoFallback(
-                            recipe.title,
-                            recipe.description,
-                          );
+                          const fallback = getFoodPhotoFallback(recipe.title, recipe.description);
                           if (target.src !== fallback) {
                             target.src = fallback;
                           }
                         }}
                       />
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900">
-                          {recipe.title}
-                        </h4>
+                        <h4 className="text-xs font-bold text-slate-900">{recipe.title}</h4>
                         <span className="text-[10px] text-emerald-700 font-semibold">
-                          {recipe.nutritionMacros?.calories} kcal |{" "}
-                          {recipe.nutritionMacros?.protein}g protein
+                          {recipe.nutritionMacros?.calories} kcal | {recipe.nutritionMacros?.protein}g protein
                         </span>
                       </div>
                     </div>

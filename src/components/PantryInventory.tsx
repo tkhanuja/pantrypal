@@ -1,16 +1,7 @@
-import React from "react";
-import { PantryItem } from "../types";
-import {
-  Package,
-  Plus,
-  Trash2,
-  Sparkles,
-  AlertTriangle,
-  CheckCircle,
-  LogIn,
-  Lock,
-} from "lucide-react";
-import { User } from "firebase/auth";
+import React from 'react';
+import { PantryItem } from '../types';
+import { Package, Plus, Trash2, Sparkles, AlertTriangle, CheckCircle, LogIn, Lock } from 'lucide-react';
+import { User } from 'firebase/auth';
 
 interface Props {
   items: PantryItem[];
@@ -21,13 +12,13 @@ interface Props {
   onOpenAuthModal: () => void;
 }
 
-const CATEGORIES: PantryItem["category"][] = [
-  "Produce",
-  "Meat & Seafood",
-  "Dairy & Eggs",
-  "Pantry & Spices",
-  "Baking",
-  "Other",
+const CATEGORIES: PantryItem['category'][] = [
+  'Produce',
+  'Meat & Seafood',
+  'Dairy & Eggs',
+  'Pantry & Spices',
+  'Baking',
+  'Other',
 ];
 
 export const PantryInventory: React.FC<Props> = ({
@@ -38,14 +29,11 @@ export const PantryInventory: React.FC<Props> = ({
   authUser,
   onOpenAuthModal,
 }) => {
-  const [selectedItemIds, setSelectedItemIds] = React.useState<
-    Record<string, boolean>
-  >({});
-  const [newItemName, setNewItemName] = React.useState("");
-  const [newItemQty, setNewItemQty] = React.useState("");
-  const [newItemCat, setNewItemCat] =
-    React.useState<PantryItem["category"]>("Produce");
-  const [expiryDays, setExpiryDays] = React.useState<string>("5");
+  const [selectedItemIds, setSelectedItemIds] = React.useState<Record<string, boolean>>({});
+  const [newItemName, setNewItemName] = React.useState('');
+  const [newItemQty, setNewItemQty] = React.useState('');
+  const [newItemCat, setNewItemCat] = React.useState<PantryItem['category']>('Produce');
+  const [expiryDays, setExpiryDays] = React.useState<string>('5');
 
   // Select all items by default on initial render
   React.useEffect(() => {
@@ -69,14 +57,14 @@ export const PantryInventory: React.FC<Props> = ({
     const newItem: PantryItem = {
       id: `p-${Date.now()}`,
       name: newItemName.trim(),
-      quantity: newItemQty.trim() || "1 item",
+      quantity: newItemQty.trim() || '1 item',
       category: newItemCat,
       expiryDays: parseInt(expiryDays) || undefined,
     };
 
     onAddItem(newItem);
-    setNewItemName("");
-    setNewItemQty("");
+    setNewItemName('');
+    setNewItemQty('');
   };
 
   const handleTriggerCook = () => {
@@ -96,13 +84,8 @@ export const PantryInventory: React.FC<Props> = ({
               <Lock className="w-4 h-4" />
             </div>
             <div>
-              <span className="font-bold text-[#1C1C1C]">
-                Authentication Required for Smart Pantry Sync:
-              </span>
-              <span className="text-[#575752] ml-1">
-                Sign in or create an account to save pantry items and
-                synchronize inventory with Cloud Firestore.
-              </span>
+              <span className="font-bold text-[#1C1C1C]">Authentication Required for Smart Pantry Sync:</span>
+              <span className="text-[#575752] ml-1">Sign in or create an account to save pantry items and synchronize inventory with Cloud Firestore.</span>
             </div>
           </div>
           <button
@@ -123,12 +106,9 @@ export const PantryInventory: React.FC<Props> = ({
               <Package className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="serif-heading text-2xl font-bold tracking-tight">
-                Smart Pantry & Fridge Inventory
-              </h2>
+              <h2 className="serif-heading text-2xl font-bold tracking-tight">Smart Pantry & Fridge Inventory</h2>
               <p className="text-xs text-[#E8E6DC] font-sans">
-                Log available ingredients to generate zero-waste personalized
-                recipes
+                Log available ingredients to generate zero-waste personalized recipes
               </p>
             </div>
           </div>
@@ -145,13 +125,8 @@ export const PantryInventory: React.FC<Props> = ({
 
       {/* Add New Item Form */}
       <div className="bg-white p-5 rounded-3xl border border-[#E5E3D8] shadow-xs">
-        <h3 className="serif-heading text-sm font-bold uppercase tracking-wider text-[#1C1C1C] mb-3">
-          Add Ingredient to Pantry
-        </h3>
-        <form
-          onSubmit={handleAddPantryItem}
-          className="grid grid-cols-1 sm:grid-cols-5 gap-3"
-        >
+        <h3 className="serif-heading text-sm font-bold uppercase tracking-wider text-[#1C1C1C] mb-3">Add Ingredient to Pantry</h3>
+        <form onSubmit={handleAddPantryItem} className="grid grid-cols-1 sm:grid-cols-5 gap-3">
           <input
             type="text"
             value={newItemName}
@@ -201,8 +176,7 @@ export const PantryInventory: React.FC<Props> = ({
             onClick={handleTriggerCook}
             className="text-xs font-bold text-[#5A5A40] hover:text-[#42422F] flex items-center gap-1"
           >
-            Generate Recipe from Selected (
-            {Object.values(selectedItemIds).filter(Boolean).length}) →
+            Generate Recipe from Selected ({Object.values(selectedItemIds).filter(Boolean).length}) →
           </button>
         </div>
 
@@ -211,13 +185,9 @@ export const PantryInventory: React.FC<Props> = ({
             <div className="w-12 h-12 bg-[#5A5A40]/10 text-[#5A5A40] rounded-2xl flex items-center justify-center mx-auto border border-[#5A5A40]/20 shadow-xs">
               <Package className="w-6 h-6" />
             </div>
-            <h4 className="serif-heading font-bold text-base text-[#1C1C1C]">
-              Your Smart Pantry is Fresh & Empty
-            </h4>
+            <h4 className="serif-heading font-bold text-base text-[#1C1C1C]">Your Smart Pantry is Fresh & Empty</h4>
             <p className="text-xs text-[#575752] max-w-sm mx-auto leading-relaxed">
-              Start fresh! Add your available ingredients above. Any items you
-              add will be saved{" "}
-              {authUser ? "to your account" : "in your browser storage"}.
+              Start fresh! Add your available ingredients above. Any items you add will be saved {authUser ? 'to your account' : 'in your browser storage'}.
             </p>
           </div>
         ) : (
@@ -232,31 +202,24 @@ export const PantryInventory: React.FC<Props> = ({
                   onClick={() => handleToggleSelect(item.id)}
                   className={`p-3.5 rounded-2xl border cursor-pointer transition flex items-center justify-between ${
                     isSelected
-                      ? "bg-[#FAF9F5] border-[#5A5A40] text-[#1C1C1C] shadow-2xs"
-                      : "bg-[#F5F5F0] border-[#E5E3D8] text-[#575752] hover:border-[#5A5A40]/40"
+                      ? 'bg-[#FAF9F5] border-[#5A5A40] text-[#1C1C1C] shadow-2xs'
+                      : 'bg-[#F5F5F0] border-[#E5E3D8] text-[#575752] hover:border-[#5A5A40]/40'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-5 h-5 rounded-md flex items-center justify-center transition ${
-                        isSelected
-                          ? "bg-[#5A5A40] text-white"
-                          : "border border-[#E5E3D8] bg-white"
+                        isSelected ? 'bg-[#5A5A40] text-white' : 'border border-[#E5E3D8] bg-white'
                       }`}
                     >
                       {isSelected && <CheckCircle className="w-4 h-4" />}
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-[#1C1C1C]">
-                        {item.name}
-                      </h4>
-                      <span className="text-[11px] font-semibold text-[#5A5A40] block">
-                        {item.quantity}
-                      </span>
+                      <h4 className="text-xs font-bold text-[#1C1C1C]">{item.name}</h4>
+                      <span className="text-[11px] font-semibold text-[#5A5A40] block">{item.quantity}</span>
                       {isExpiringSoon && (
                         <span className="text-[10px] font-bold text-[#D47A5F] flex items-center gap-1 mt-0.5">
-                          <AlertTriangle className="w-3 h-3" /> Expires in{" "}
-                          {item.expiryDays} days
+                          <AlertTriangle className="w-3 h-3" /> Expires in {item.expiryDays} days
                         </span>
                       )}
                     </div>

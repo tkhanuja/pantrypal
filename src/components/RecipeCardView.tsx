@@ -1,22 +1,9 @@
-import React from "react";
-import { Recipe, UserProfile, Ingredient } from "../types";
-import { getFoodPhotoFallback } from "../lib/foodPhotos";
-import { ScheduleModal } from "./ScheduleModal";
-import {
-  Clock,
-  Flame,
-  Users,
-  Heart,
-  BookmarkCheck,
-  CalendarPlus,
-  Sparkles,
-  Image as ImageIcon,
-  CheckCircle,
-  ChevronRight,
-  Printer,
-  Upload,
-} from "lucide-react";
-import { User } from "firebase/auth";
+import React from 'react';
+import { Recipe, UserProfile, Ingredient } from '../types';
+import { getFoodPhotoFallback } from '../lib/foodPhotos';
+import { ScheduleModal } from './ScheduleModal';
+import { Clock, Flame, Users, Heart, BookmarkCheck, CalendarPlus, Sparkles, Image as ImageIcon, CheckCircle, ChevronRight, Printer, Upload } from 'lucide-react';
+import { User } from 'firebase/auth';
 
 interface Props {
   recipe: Recipe;
@@ -24,11 +11,7 @@ interface Props {
   isSaved?: boolean;
   onSave?: (recipe: Recipe) => void;
   onAddToMealPlan?: (recipe: Recipe) => void;
-  onScheduleRecipe?: (
-    recipe: Recipe,
-    selectedDays: string[],
-    mealType: string,
-  ) => void;
+  onScheduleRecipe?: (recipe: Recipe, selectedDays: string[], mealType: string) => void;
   onRefinePrompt?: (promptText: string) => void;
   authUser?: User | null;
   onOpenAuthModal?: () => void;
@@ -46,29 +29,21 @@ export const RecipeCardView: React.FC<Props> = ({
   onOpenAuthModal,
 }) => {
   const [servings, setServings] = React.useState<number>(recipe.servings || 2);
-  const [completedSteps, setCompletedSteps] = React.useState<
-    Record<number, boolean>
-  >({});
-
+  const [completedSteps, setCompletedSteps] = React.useState<Record<number, boolean>>({});
+  
   // Ensure every recipe card has a valid image representing the item presented
-  const initialImg =
-    recipe.imageUrl || getFoodPhotoFallback(recipe.title, recipe.description);
+  const initialImg = recipe.imageUrl || getFoodPhotoFallback(recipe.title, recipe.description);
   const [imageUrl, setImageUrl] = React.useState<string>(initialImg);
   const [savedLocally, setSavedLocally] = React.useState<boolean>(isSaved);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] =
-    React.useState<boolean>(false);
-  const [uploadSuccessToast, setUploadSuccessToast] =
-    React.useState<boolean>(false);
-
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = React.useState<boolean>(false);
+  const [uploadSuccessToast, setUploadSuccessToast] = React.useState<boolean>(false);
+  
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   // Sync image URL & fallback if recipe object updates
   React.useEffect(() => {
     const photo = getFoodPhotoFallback(recipe.title, recipe.description);
-    if (
-      !recipe.imageUrl ||
-      recipe.imageUrl.includes("photo-1546069901-ba9599a7e63c")
-    ) {
+    if (!recipe.imageUrl || recipe.imageUrl.includes('photo-1546069901-ba9599a7e63c')) {
       setImageUrl(photo);
       recipe.imageUrl = photo;
     } else {
@@ -99,7 +74,7 @@ export const RecipeCardView: React.FC<Props> = ({
 
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement("canvas");
+        const canvas = document.createElement('canvas');
         const MAX_WIDTH = 1000;
         const MAX_HEIGHT = 1000;
         let width = img.width;
@@ -119,10 +94,10 @@ export const RecipeCardView: React.FC<Props> = ({
 
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
           setImageUrl(dataUrl);
           recipe.imageUrl = dataUrl;
@@ -139,11 +114,11 @@ export const RecipeCardView: React.FC<Props> = ({
       img.src = result;
     };
     reader.readAsDataURL(file);
-    e.target.value = "";
+    e.target.value = '';
   };
 
   const handleToggleStep = (index: number) => {
-    setCompletedSteps((prev) => ({ ...prev, [index]: !prev[index] }));
+    setCompletedSteps(prev => ({ ...prev, [index]: !prev[index] }));
   };
 
   const handleSaveClick = () => {
@@ -172,14 +147,14 @@ export const RecipeCardView: React.FC<Props> = ({
     fats: 15,
     fiber: 6,
     sodium: 400,
-    sugar: 4,
+    sugar: 4
   };
 
   // Group ingredients by category
   const ingredientsByCategory = React.useMemo(() => {
     const groups: Record<string, Ingredient[]> = {};
-    (recipe.ingredients || []).forEach((ing) => {
-      const cat = ing.category || "Pantry & Spices";
+    (recipe.ingredients || []).forEach(ing => {
+      const cat = ing.category || 'Pantry & Spices';
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(ing);
     });
@@ -198,10 +173,7 @@ export const RecipeCardView: React.FC<Props> = ({
             referrerPolicy="no-referrer"
             onError={(e) => {
               const target = e.currentTarget as HTMLImageElement;
-              const fallback = getFoodPhotoFallback(
-                recipe.title,
-                recipe.description,
-              );
+              const fallback = getFoodPhotoFallback(recipe.title, recipe.description);
               if (target.src !== fallback) {
                 target.src = fallback;
               }
@@ -210,17 +182,13 @@ export const RecipeCardView: React.FC<Props> = ({
         ) : (
           <div className="w-full h-full bg-[#5A5A40] flex flex-col items-center justify-center p-6 text-center">
             <Sparkles className="w-12 h-12 text-amber-200 mb-2 animate-pulse" />
-            <p className="serif-heading text-white font-bold text-xl">
-              {recipe.title}
-            </p>
+            <p className="serif-heading text-white font-bold text-xl">{recipe.title}</p>
             <button
               onClick={handleUploadClick}
               className="mt-3 px-4 py-2 bg-[#D47A5F] hover:bg-[#B55F46] text-white rounded-xl text-xs font-semibold shadow-md flex items-center gap-2 transition"
             >
               <Upload className="w-4 h-4 text-amber-200" />
-              {authUser
-                ? "Upload Custom Recipe Photo"
-                : "Sign In to Upload Photo"}
+              {authUser ? 'Upload Custom Recipe Photo' : 'Sign In to Upload Photo'}
             </button>
           </div>
         )}
@@ -262,24 +230,18 @@ export const RecipeCardView: React.FC<Props> = ({
             <button
               onClick={handleUploadClick}
               className="px-3 py-1.5 bg-[#1C1C1C]/80 backdrop-blur-md text-amber-200 hover:text-white rounded-xl text-xs font-semibold shadow-md flex items-center gap-1.5 border border-white/20 transition hover:scale-105"
-              title={
-                authUser
-                  ? "Upload a custom photo saved to your account"
-                  : "Sign in to upload a custom photo"
-              }
+              title={authUser ? "Upload a custom photo saved to your account" : "Sign in to upload a custom photo"}
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>
-                {authUser ? "Upload Photo" : "Sign In to Upload Photo"}
-              </span>
+              <span>{authUser ? 'Upload Photo' : 'Sign In to Upload Photo'}</span>
             </button>
 
             <button
               onClick={handleSaveClick}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 backdrop-blur-md transition ${
                 savedLocally
-                  ? "bg-[#5A5A40] text-white ring-2 ring-amber-200/50"
-                  : "bg-white/90 text-[#1C1C1C] hover:bg-white"
+                  ? 'bg-[#5A5A40] text-white ring-2 ring-amber-200/50'
+                  : 'bg-white/90 text-[#1C1C1C] hover:bg-white'
               }`}
             >
               {savedLocally ? (
@@ -288,8 +250,7 @@ export const RecipeCardView: React.FC<Props> = ({
                 </>
               ) : (
                 <>
-                  <Heart className="w-4 h-4 text-[#D47A5F] fill-[#D47A5F]" />{" "}
-                  Save Recipe
+                  <Heart className="w-4 h-4 text-[#D47A5F] fill-[#D47A5F]" /> Save Recipe
                 </>
               )}
             </button>
@@ -331,24 +292,18 @@ export const RecipeCardView: React.FC<Props> = ({
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#88886C]">
                 Nutritional Breakdown (Per Serving)
               </h4>
-              <p className="text-[11px] text-[#575752]">
-                Scaled for {servings} servings
-              </p>
+              <p className="text-[11px] text-[#575752]">Scaled for {servings} servings</p>
             </div>
             {/* Servings Scaler */}
             <div className="flex items-center gap-2 bg-white border border-[#E5E3D8] rounded-xl px-2 py-1 shadow-2xs">
-              <span className="text-xs font-semibold text-[#575752]">
-                Servings:
-              </span>
+              <span className="text-xs font-semibold text-[#575752]">Servings:</span>
               <button
                 onClick={() => setServings(Math.max(1, servings - 1))}
                 className="w-5 h-5 flex items-center justify-center rounded bg-[#F5F5F0] font-bold hover:bg-[#E8E6DC] text-[#1C1C1C]"
               >
                 -
               </button>
-              <span className="text-xs font-bold text-[#1C1C1C] px-1">
-                {servings}
-              </span>
+              <span className="text-xs font-bold text-[#1C1C1C] px-1">{servings}</span>
               <button
                 onClick={() => setServings(servings + 1)}
                 className="w-5 h-5 flex items-center justify-center rounded bg-[#F5F5F0] font-bold hover:bg-[#E8E6DC] text-[#1C1C1C]"
@@ -360,50 +315,26 @@ export const RecipeCardView: React.FC<Props> = ({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white p-3 rounded-xl border border-[#E5E3D8] text-center shadow-2xs">
-              <span className="text-[10px] font-bold text-[#88886C] uppercase block">
-                Calories
-              </span>
-              <span className="text-lg font-extrabold text-[#1C1C1C]">
-                {Math.round(macros.calories)}
-              </span>
-              <span className="text-[10px] font-semibold text-[#D47A5F] block">
-                kcal
+              <span className="text-[10px] font-bold text-[#88886C] uppercase block">Calories</span>
+              <span className="text-lg font-extrabold text-[#1C1C1C]">{Math.round(macros.calories)}</span>
+              <span className="text-[10px] font-semibold text-[#D47A5F] block">kcal</span>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-[#E5E3D8] text-center shadow-2xs">
+              <span className="text-[10px] font-bold text-[#88886C] uppercase block">Protein</span>
+              <span className="text-lg font-extrabold text-[#5A5A40]">{Math.round(macros.protein)}g</span>
+              <span className="text-[10px] font-semibold text-[#575752] block">
+                {userProfile?.macroTargets ? `${Math.round((macros.protein / userProfile.macroTargets.protein) * 100)}% of daily` : 'High protein'}
               </span>
             </div>
             <div className="bg-white p-3 rounded-xl border border-[#E5E3D8] text-center shadow-2xs">
-              <span className="text-[10px] font-bold text-[#88886C] uppercase block">
-                Protein
-              </span>
-              <span className="text-lg font-extrabold text-[#5A5A40]">
-                {Math.round(macros.protein)}g
-              </span>
-              <span className="text-[10px] font-semibold text-[#575752] block">
-                {userProfile?.macroTargets
-                  ? `${Math.round((macros.protein / userProfile.macroTargets.protein) * 100)}% of daily`
-                  : "High protein"}
-              </span>
+              <span className="text-[10px] font-bold text-[#88886C] uppercase block">Carbs</span>
+              <span className="text-lg font-extrabold text-[#5A5A40]">{Math.round(macros.carbs)}g</span>
+              <span className="text-[10px] font-semibold text-[#575752] block">Fiber: {Math.round(macros.fiber)}g</span>
             </div>
             <div className="bg-white p-3 rounded-xl border border-[#E5E3D8] text-center shadow-2xs">
-              <span className="text-[10px] font-bold text-[#88886C] uppercase block">
-                Carbs
-              </span>
-              <span className="text-lg font-extrabold text-[#5A5A40]">
-                {Math.round(macros.carbs)}g
-              </span>
-              <span className="text-[10px] font-semibold text-[#575752] block">
-                Fiber: {Math.round(macros.fiber)}g
-              </span>
-            </div>
-            <div className="bg-white p-3 rounded-xl border border-[#E5E3D8] text-center shadow-2xs">
-              <span className="text-[10px] font-bold text-[#88886C] uppercase block">
-                Fats
-              </span>
-              <span className="text-lg font-extrabold text-[#D47A5F]">
-                {Math.round(macros.fats)}g
-              </span>
-              <span className="text-[10px] font-semibold text-[#575752] block">
-                Sodium: {Math.round(macros.sodium)}mg
-              </span>
+              <span className="text-[10px] font-bold text-[#88886C] uppercase block">Fats</span>
+              <span className="text-lg font-extrabold text-[#D47A5F]">{Math.round(macros.fats)}g</span>
+              <span className="text-[10px] font-semibold text-[#575752] block">Sodium: {Math.round(macros.sodium)}mg</span>
             </div>
           </div>
         </div>
@@ -415,31 +346,19 @@ export const RecipeCardView: React.FC<Props> = ({
             Ingredients ({recipe.ingredients?.length || 0})
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(
-              Object.entries(ingredientsByCategory) as [string, Ingredient[]][]
-            ).map(([category, items]) => (
-              <div
-                key={category}
-                className="bg-[#FAF9F5] p-3.5 rounded-2xl border border-[#E5E3D8]"
-              >
+            {(Object.entries(ingredientsByCategory) as [string, Ingredient[]][]).map(([category, items]) => (
+              <div key={category} className="bg-[#FAF9F5] p-3.5 rounded-2xl border border-[#E5E3D8]">
                 <span className="text-xs font-bold text-[#5A5A40] uppercase tracking-wider block mb-2">
                   {category}
                 </span>
                 <ul className="space-y-1.5 text-xs text-[#1C1C1C]">
                   {items.map((ing, i) => {
-                    const scaledAmount =
-                      Math.round(ing.amount * scaleFactor * 10) / 10;
+                    const scaledAmount = Math.round((ing.amount * scaleFactor) * 10) / 10;
                     return (
-                      <li
-                        key={i}
-                        className="flex items-start justify-between py-0.5 border-b border-[#E5E3D8]/50 last:border-0"
-                      >
-                        <span className="font-medium text-[#1C1C1C]">
-                          {ing.item}
-                        </span>
+                      <li key={i} className="flex items-start justify-between py-0.5 border-b border-[#E5E3D8]/50 last:border-0">
+                        <span className="font-medium text-[#1C1C1C]">{ing.item}</span>
                         <span className="font-bold text-[#5A5A40] whitespace-nowrap ml-2">
-                          {scaledAmount} {ing.unit}{" "}
-                          {ing.notes ? `(${ing.notes})` : ""}
+                          {scaledAmount} {ing.unit} {ing.notes ? `(${ing.notes})` : ''}
                         </span>
                       </li>
                     );
@@ -465,24 +384,20 @@ export const RecipeCardView: React.FC<Props> = ({
                   onClick={() => handleToggleStep(idx)}
                   className={`p-3.5 rounded-2xl border cursor-pointer transition flex items-start gap-3 ${
                     isChecked
-                      ? "bg-[#F5F5F0] border-[#E5E3D8] text-[#88886C] line-through"
-                      : "bg-white border-[#E5E3D8] hover:border-[#5A5A40] text-[#1C1C1C]"
+                      ? 'bg-[#F5F5F0] border-[#E5E3D8] text-[#88886C] line-through'
+                      : 'bg-white border-[#E5E3D8] hover:border-[#5A5A40] text-[#1C1C1C]'
                   }`}
                 >
                   <button
                     type="button"
                     className={`mt-0.5 w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0 transition ${
-                      isChecked
-                        ? "bg-[#5A5A40] text-white"
-                        : "border border-[#E5E3D8] text-transparent hover:border-[#5A5A40]"
+                      isChecked ? 'bg-[#5A5A40] text-white' : 'border border-[#E5E3D8] text-transparent hover:border-[#5A5A40]'
                     }`}
                   >
                     <CheckCircle className="w-4 h-4" />
                   </button>
                   <div className="text-xs sm:text-sm font-medium leading-relaxed">
-                    <span className="font-bold text-[#5A5A40] mr-1.5">
-                      Step {idx + 1}:
-                    </span>
+                    <span className="font-bold text-[#5A5A40] mr-1.5">Step {idx + 1}:</span>
                     {step}
                   </div>
                 </div>
@@ -516,14 +431,12 @@ export const RecipeCardView: React.FC<Props> = ({
               onClick={handleSaveClick}
               className={`px-4 py-2 rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition ${
                 savedLocally
-                  ? "bg-[#5A5A40] text-white"
-                  : "bg-[#F5F5F0] text-[#5A5A40] hover:bg-[#E8E6DC] border border-[#E5E3D8]"
+                  ? 'bg-[#5A5A40] text-white'
+                  : 'bg-[#F5F5F0] text-[#5A5A40] hover:bg-[#E8E6DC] border border-[#E5E3D8]'
               }`}
             >
-              <Heart
-                className={`w-4 h-4 ${savedLocally ? "fill-white" : "text-[#D47A5F]"}`}
-              />
-              {savedLocally ? "Saved to Recipe Book" : "Save to Recipe Book"}
+              <Heart className={`w-4 h-4 ${savedLocally ? 'fill-white' : 'text-[#D47A5F]'}`} />
+              {savedLocally ? 'Saved to Recipe Book' : 'Save to Recipe Book'}
             </button>
 
             <button
