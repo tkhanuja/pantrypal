@@ -1,0 +1,45 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+# Dependencies / Virtual Environments
+node_modules/
+.pnp/
+.pnp.js
+.venv/
+env/
+venv/
+ENV/
+
+# Environment and Credential files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Firebase and Local Build Artifacts
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+dist/
+build/
+.next/
+out/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

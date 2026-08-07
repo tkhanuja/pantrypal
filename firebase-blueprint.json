@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profile settings, system prompts, and macro targets",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "globalSystemPrompt": { "type": "string" },
+        "dietaryRestrictions": { "type": "array", "items": { "type": "string" } },
+        "allergies": { "type": "array", "items": { "type": "string" } },
+        "measurementUnit": { "type": "string" },
+        "preferredCuisines": { "type": "array", "items": { "type": "string" } },
+        "mealPrepStyle": { "type": "string" },
+        "macroTargets": {
+          "type": "object",
+          "properties": {
+            "calories": { "type": "number" },
+            "protein": { "type": "number" },
+            "carbs": { "type": "number" },
+            "fats": { "type": "number" }
+          }
+        },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "recipes": {
+      "title": "User Recipes",
+      "description": "Recipes saved privately by user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "prepTime": { "type": "number" },
+        "cookTime": { "type": "number" },
+        "servings": { "type": "number" },
+        "difficulty": { "type": "string" },
+        "dietaryTags": { "type": "array", "items": { "type": "string" } },
+        "ingredients": { "type": "array", "items": { "type": "object" } },
+        "instructions": { "type": "array", "items": { "type": "string" } },
+        "nutritionMacros": { "type": "object" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "title"]
+    }
+  },
+  "security": {
+    "users": {
+      "read": "request.auth != null && request.auth.uid == resource.data.id",
+      "write": "request.auth != null && request.auth.uid == resource.data.id"
+    }
+  }
+}

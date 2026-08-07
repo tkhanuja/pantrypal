@@ -1,0 +1,6 @@
+{
+  "name": "PantryPal",
+  "description": "AI-powered culinary companion for personalized recipe engineering, macro tracking, and meal management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

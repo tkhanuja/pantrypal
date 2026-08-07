@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --olive: #5A5A40;
+    --olive-dark: #42422F;
+    --olive-light: #737356;
+    --olive-muted: #88886C;
+    --terracotta: #D47A5F;
+    --terracotta-dark: #B55F46;
+    --terracotta-light: #EBB2A1;
+    --linen: #F5F5F0;
+    --linen-card: #FAF9F5;
+    --linen-dark: #E8E6DC;
+    --ink: #1C1C1C;
+    --ink-muted: #575752;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--linen);
+    color: var(--ink);
+  }
+
+  h1, h2, h3, .serif-heading {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+}
+
+/* Natural Tones Utilities */
+.bg-olive { background-color: #5A5A40; }
+.bg-olive-dark { background-color: #42422F; }
+.bg-olive-light { background-color: #737356; }
+.bg-olive-muted { background-color: #88886C; }
+.bg-olive-subtle { background-color: rgba(90, 90, 64, 0.08); }
+
+.text-olive { color: #5A5A40; }
+.text-olive-dark { color: #42422F; }
+.text-olive-light { color: #737356; }
+
+.border-olive { border-color: #5A5A40; }
+.border-olive-subtle { border-color: rgba(90, 90, 64, 0.2); }
+
+.bg-terracotta { background-color: #D47A5F; }
+.bg-terracotta-dark { background-color: #B55F46; }
+.bg-terracotta-subtle { background-color: rgba(212, 122, 95, 0.1); }
+
+.text-terracotta { color: #D47A5F; }
+.text-terracotta-dark { color: #B55F46; }
+
+.border-terracotta { border-color: #D47A5F; }
+
+.bg-linen { background-color: #F5F5F0; }
+.bg-linen-card { background-color: #FAF9F5; }
+.bg-linen-dark { background-color: #E8E6DC; }
+
+.chat-bubble-ai {
+  background-color: #FFFFFF;
+  border-radius: 20px 20px 20px 4px;
+  box-shadow: 0 2px 10px rgba(90, 90, 64, 0.05);
+  border: 1px solid rgba(90, 90, 64, 0.12);
+}
+
+.chat-bubble-user {
+  background-color: #5A5A40;
+  color: #FFFFFF;
+  border-radius: 20px 20px 4px 20px;
+}
+
+.recipe-card-natural {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 24px;
+  background-color: #FFFFFF;
+  border: 1px solid rgba(90, 90, 64, 0.15);
+}
+
+.recipe-card-natural:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(90, 90, 64, 0.1);
+}
+
