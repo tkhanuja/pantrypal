@@ -3,7 +3,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
-import { getFoodPhotoFallback as getFoodPhotoFallbackLib } from './src/lib/foodPhotos';
+import { getFoodPhotoFallback as getFoodPhotoFallbackLib } from './src/lib/foodPhotos.ts';
 
 dotenv.config();
 
