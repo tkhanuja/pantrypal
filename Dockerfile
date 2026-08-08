@@ -3,38 +3,40 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Declare build-time variables so Vite can catch them
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_AUTH_DOMAIN
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_FIREBASE_STORAGE_BUCKET
+ARG VITE_FIREBASE_MESSAGING_SENDER_ID
+ARG VITE_FIREBASE_APP_ID
+ARG VITE_FIREBASE_MEASUREMENT_ID
+
+# Make them available as environment variables during the build command
+ENV VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY
+ENV VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN
+ENV VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID
+ENV VITE_FIREBASE_STORAGE_BUCKET=$VITE_FIREBASE_STORAGE_BUCKET
+ENV VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID
+ENV VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID
+ENV VITE_FIREBASE_MEASUREMENT_ID=$VITE_FIREBASE_MEASUREMENT_ID
+
 COPY package*.json ./
-
-# Install all dependencies (including tsx and devDependencies for building)
 RUN npm ci
-
-# Copy the rest of the application source code
 COPY . .
 
-# Build the production React/Vite static files into /app/dist
+# Vite will now safely bake these keys into your compiled frontend assets
 RUN npm run build
 
 # Stage 2: Production runtime image
 FROM node:22-alpine
-
 WORKDIR /app
-
-# Copy package files and install ALL dependencies 
-# (We need tsx in production to run server.ts directly)
 COPY package*.json ./
 RUN npm ci
-
-# Copy built static assets from the builder stage
 COPY --from=builder /app/dist ./dist
-
-# Copy the server file and any other necessary source files
 COPY server.ts ./
-# If your server requires any other ts files or configs, copy them here too
 
-# Expose the port Cloud Run expects
 ENV PORT=8080
 EXPOSE 8080
 
-# Run the TypeScript server using tsx
 CMD ["npx", "tsx", "server.ts"]
