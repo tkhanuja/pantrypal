@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --external:express --external:fsevents --external:esbuild --external:lightningcss --sourcemap --outfile=dist/server.cjs",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=esm --external:express --external:fsevents --external:esbuild --external:lightningcss --sourcemap --outfile=dist/server.js",
     "build:server": "esbuild server.ts --bundle --platform=node --format=cjs --external:express --external:fsevents --external:esbuild --external:lightningcss --sourcemap --outfile=dist/server.cjs",
-    "start": "tsx server.ts",
+    "start": "node dist/server.js",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
@@ -31,7 +31,6 @@
     "autoprefixer": "^10.5.4",
     "esbuild": "^0.25.12",
     "tailwindcss": "^4.3.3",
-    
     "typescript": "^5.8.3",
     "vite": "^6.4.3"
   }
