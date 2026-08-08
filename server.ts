@@ -10,9 +10,15 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT) || 8080;
 
-
-
-
+const possibleDistPaths = [
+  path.join(process.cwd(), "dist"),
+  path.join(__dirname, "dist"),
+  path.join(__dirname, "../dist"),
+];
+const distPath =
+  possibleDistPaths.find((p) => fs.existsSync(p)) ||
+  path.join(process.cwd(), "dist");
+const indexPath = path.join(distPath, "index.html");
 app.use(express.json({ limit: '10mb' }));
 
 // Lazy initializer for Gemini client to prevent crash if key is missing on startup
@@ -583,37 +589,45 @@ async function setupApp() {
     console.log(`[PantryPal Server] Serving production static files from: ${distPath}`);
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
+      app.use(express.static(distPath, { index: false }));
       res.sendFile(path.join(distPath, 'index.html'));
-      let html = fs.readFileSync(indexPath, "utf8");
+      try {
+        let html = fs.readFileSync(indexPath, "utf8");
 
-      // Inject runtime environment variables straight into the HTML
-      html = html
-        .replace(
-          "%VITE_FIREBASE_API_KEY%",
-          process.env.VITE_FIREBASE_API_KEY || "",
-        )
-        .replace(
-          "%VITE_FIREBASE_AUTH_DOMAIN%",
-          process.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-        )
-        .replace(
-          "%VITE_FIREBASE_PROJECT_ID%",
-          process.env.VITE_FIREBASE_PROJECT_ID || "",
-        )
-        .replace(
-          "%VITE_FIREBASE_STORAGE_BUCKET%",
-          process.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-        )
-        .replace(
-          "%VITE_FIREBASE_MESSAGING_SENDER_ID%",
-          process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-        )
-        .replace(
-          "%VITE_FIREBASE_APP_ID%",
-          process.env.VITE_FIREBASE_APP_ID || "",
-        );
+        // Replace placeholders with runtime Cloud Run environment variables
+        html = html
+          .replace(
+            /%VITE_FIREBASE_API_KEY%/g,
+            process.env.VITE_FIREBASE_API_KEY || "",
+          )
+          .replace(
+            /%VITE_FIREBASE_AUTH_DOMAIN%/g,
+            process.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+          )
+          .replace(
+            /%VITE_FIREBASE_PROJECT_ID%/g,
+            process.env.VITE_FIREBASE_PROJECT_ID || "",
+          )
+          .replace(
+            /%VITE_FIREBASE_STORAGE_BUCKET%/g,
+            process.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+          )
+          .replace(
+            /%VITE_FIREBASE_MESSAGING_SENDER_ID%/g,
+            process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+          )
+          .replace(
+            /%VITE_FIREBASE_APP_ID%/g,
+            process.env.VITE_FIREBASE_APP_ID || "",
+          );
 
-      res.send(html);
+        res.setHeader("Content-Type", "text/html");
+        res.send(html);
+      } catch (err) {
+        res
+          .status(404)
+          .send("Application build not found. Please run npm run build.");
+      }
     });
   }
 
