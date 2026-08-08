@@ -13,6 +13,7 @@ import {
   memoryLocalCache,
 } from "firebase/firestore";
 
+console.log("DEBUG API KEY:", import.meta.env.VITE_FIREBASE_API_KEY);
 // Read configuration securely from Vite build environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
