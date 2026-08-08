@@ -27,9 +27,11 @@ ENV VITE_FIREBASE_OAUTH_CLIENT_ID=$VITE_FIREBASE_OAUTH_CLIENT_ID
 
 COPY package*.json ./
 RUN npm ci
+
+# Forces Docker to ignore cache for source files
+ARG CACHEBUST=2026-08-07
 COPY . .
 
-# Run Vite and Esbuild as separate steps to catch precise errors
 RUN npm run build
 RUN npm run build:server
 
