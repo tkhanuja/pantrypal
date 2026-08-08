@@ -29,7 +29,9 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 
+# Run Vite and Esbuild as separate steps to catch precise errors
 RUN npm run build
+RUN npm run build:server
 
 # Stage 2: Production runtime image
 FROM node:22-alpine
