@@ -22,10 +22,11 @@ export default defineConfig(() => {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       hmr: process.env.DISABLE_HMR !== "true",
       watch: process.env.DISABLE_HMR === "true" ? null : {},
-      allowedHosts: true
-    },
-    preview: {
-      allowedHosts: true
+      host: true,
+      allowedHosts: [
+      'pantry-pal-204324115968.us-west1.run.app',
+      '.run.app','all'
+    ],
     },
   };
 });
