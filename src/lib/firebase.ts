@@ -12,21 +12,17 @@ import {
   getFirestore,
   memoryLocalCache,
 } from "firebase/firestore";
-import localConfig from "../../firebase-applet-config.json";
 
-// Merge JSON config with Vite environment variables
+// Read configuration from Vite environment variables (baked in at build time via Cloud Build)
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || localConfig.apiKey,
-  authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId,
-  storageBucket:
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket,
-  messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ||
-    localConfig.messagingSenderId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || localConfig.appId,
-  firestoreDatabaseId: localConfig.firestoreDatabaseId || "default",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
+  firestoreDatabaseId:
+    import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || "default",
 };
 
 const app =
@@ -46,7 +42,6 @@ setPersistence(auth, browserLocalPersistence).catch(() => {
 
 let firestoreInstance;
 try {
-  // If databaseId is 'default', pass undefined so Firestore uses the primary default instance safely
   const dbId = firebaseConfig.firestoreDatabaseId;
   const validDbId = dbId && dbId !== "default" ? dbId : undefined;
 
