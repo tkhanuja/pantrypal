@@ -8,7 +8,7 @@ import { getFoodPhotoFallback as getFoodPhotoFallbackLib } from './src/lib/foodP
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT) || 8080;
+const port = Number(process.env.PORT) || 8080;
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -574,8 +574,8 @@ async function setupApp() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[PantryPal Server] Server running on http://0.0.0.0:${PORT}`);
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`[PantryPal Server] Server running on http://0.0.0.0:${port}`);
   });
 }
 
