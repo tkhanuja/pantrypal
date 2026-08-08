@@ -13,7 +13,7 @@ import {
   memoryLocalCache,
 } from "firebase/firestore";
 
-// Read configuration from Vite environment variables (baked in at build time via Cloud Build)
+// Read configuration securely from Vite build environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
@@ -31,7 +31,6 @@ const app =
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Gracefully handle persistence across iframes / cross-origin published environments
 setPersistence(auth, browserLocalPersistence).catch(() => {
   setPersistence(auth, browserSessionPersistence).catch(() => {
     setPersistence(auth, inMemoryPersistence).catch((err) => {
