@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=esm --external:express --external:fsevents --external:esbuild --external:lightningcss --sourcemap --outfile=dist/server.js",
-    "build:server": "esbuild server.ts --bundle --platform=node --format=cjs --external:express --external:fsevents --external:esbuild --external:lightningcss --sourcemap --outfile=dist/server.cjs",
-    "start": "node dist/server.js",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --external:express --external:dotenv --external:fsevents --external:esbuild --external:lightningcss --sourcemap --outfile=dist/server.cjs",
+    "build:server": "esbuild server.ts --bundle --platform=node --format=cjs --external:express --external:dotenv --external:fsevents --external:esbuild --external:lightningcss --sourcemap --outfile=dist/server.cjs",
+    "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
