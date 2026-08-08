@@ -11,18 +11,6 @@ const app = express();
 const port = Number(process.env.PORT) || 8080;
 
 
-const vite = await createViteServer({
-  server: {
-    middlewareMode: true,
-    allowedHosts: [
-      "pantry-pal-204324115968.us-west1.run.app",
-      ".run.app", // allows all hosts dynamically
-    ],
-  },
-  appType: "spa",
-});
-
-app.use(vite.middlewares);
 
 
 app.use(express.json({ limit: '10mb' }));
@@ -577,7 +565,12 @@ Respond ONLY with JSON schema:
 async function setupApp() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true, allowedHosts: [
+          "pantry-pal-204324115968.us-west1.run.app",
+          ".run.app",
+        ],
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -594,4 +587,6 @@ async function setupApp() {
   });
 }
 
-setupApp();
+setupApp().catch((err) => {
+  console.error("Failed to start server:", err);
+});
