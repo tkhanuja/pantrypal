@@ -22,13 +22,10 @@ export default defineConfig(() => {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       hmr: process.env.DISABLE_HMR !== "true",
       watch: process.env.DISABLE_HMR === "true" ? null : {},
-      allowedHosts: [
-        "pantry-pal-204324115968.us-west1.run.app",
-        ".run.app", // This allows any Cloud Run subdomain automatically
-      ],
+      allowedHosts: true
     },
     preview: {
-      allowedHosts: ["pantry-pal-204324115968.us-west1.run.app", ".run.app"],
+      allowedHosts: true
     },
   };
 });
