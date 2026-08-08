@@ -584,6 +584,36 @@ async function setupApp() {
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
+      let html = fs.readFileSync(indexPath, "utf8");
+
+      // Inject runtime environment variables straight into the HTML
+      html = html
+        .replace(
+          "%VITE_FIREBASE_API_KEY%",
+          process.env.VITE_FIREBASE_API_KEY || "",
+        )
+        .replace(
+          "%VITE_FIREBASE_AUTH_DOMAIN%",
+          process.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+        )
+        .replace(
+          "%VITE_FIREBASE_PROJECT_ID%",
+          process.env.VITE_FIREBASE_PROJECT_ID || "",
+        )
+        .replace(
+          "%VITE_FIREBASE_STORAGE_BUCKET%",
+          process.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+        )
+        .replace(
+          "%VITE_FIREBASE_MESSAGING_SENDER_ID%",
+          process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+        )
+        .replace(
+          "%VITE_FIREBASE_APP_ID%",
+          process.env.VITE_FIREBASE_APP_ID || "",
+        );
+
+      res.send(html);
     });
   }
 
