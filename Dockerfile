@@ -46,4 +46,4 @@ COPY server.ts ./
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/server.cjs"]
