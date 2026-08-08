@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
 import { getFoodPhotoFallback as getFoodPhotoFallbackLib } from './src/lib/foodPhotos';
-
+import fs from "fs";
 dotenv.config();
 
 const app = express();
@@ -562,11 +562,15 @@ Respond ONLY with JSON schema:
 });
 
 // Vite Middleware for development / Static file serving for production
+// Vite Middleware for development / Static file serving for production
 async function setupApp() {
-  if (process.env.NODE_ENV !== 'production') {
+  const isProduction = process.env.NODE_ENV === 'production' || fs.existsSync(path.join(process.cwd(), 'dist/index.html'));
+
+  if (!isProduction) {
     const vite = await createViteServer({
       server: {
-        middlewareMode: true, allowedHosts: [
+        middlewareMode: true, 
+        allowedHosts: [
           "pantry-pal-204324115968.us-west1.run.app",
           ".run.app",
         ],
@@ -576,6 +580,7 @@ async function setupApp() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    console.log(`[PantryPal Server] Serving production static files from: ${distPath}`);
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
