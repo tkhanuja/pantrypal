@@ -44,7 +44,7 @@ steps:
       - 'us-west1'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'NODE_ENV=production'
+      - 'NODE_ENV=production,VITE_FIREBASE_API_KEY=AIzaSyAO3xx6mnITcD9h6GDk7qhzpQMvSiswSVk,VITE_FIREBASE_AUTH_DOMAIN=pantry-pal-66ed8.firebaseapp.com,VITE_FIREBASE_PROJECT_ID=pantry-pal-66ed8,VITE_FIREBASE_STORAGE_BUCKET=pantry-pal-66ed8.firebasestorage.app,VITE_FIREBASE_MESSAGING_SENDER_ID=557285061653,VITE_FIREBASE_APP_ID=1:557285061653:web:d777e9405d61032bab8a1c'
 
 images:
   - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/pantrypal/pantry-pal:$COMMIT_SHA'
