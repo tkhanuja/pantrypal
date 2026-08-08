@@ -5,6 +5,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig(() => {
   return {
+    base: "./",
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
@@ -24,9 +25,10 @@ export default defineConfig(() => {
       watch: process.env.DISABLE_HMR === "true" ? null : {},
       host: true,
       allowedHosts: [
-      'pantry-pal-204324115968.us-west1.run.app',
-      '.run.app','all'
-    ],
+        "pantry-pal-204324115968.us-west1.run.app",
+        ".run.app",
+        "all",
+      ],
     },
   };
 });
