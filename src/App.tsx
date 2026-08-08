@@ -1,22 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { UserProfile, AdHocOverride, Recipe, MealPlanEntry, PantryItem } from './types';
+import React, { useEffect, useState } from "react";
+import {
+  UserProfile,
+  AdHocOverride,
+  Recipe,
+  MealPlanEntry,
+  PantryItem,
+} from "./types";
 import {
   DEFAULT_PROFILES,
   INITIAL_AD_HOC_OVERRIDE,
   INITIAL_SAVED_RECIPES,
   INITIAL_PANTRY_ITEMS,
   INITIAL_MEAL_PLAN,
-} from './data/initialData';
-import { Navbar, ActiveTab } from './components/Navbar';
-import { ChatInterface } from './components/ChatInterface';
-import { ProfileSettings } from './components/ProfileSettings';
-import { RecipeBook } from './components/RecipeBook';
-import { MealPlanner } from './components/MealPlanner';
-import { PantryInventory } from './components/PantryInventory';
-import { AdHocOverrideModal } from './components/AdHocOverrideModal';
-import { AuthModal } from './components/AuthModal';
-import { auth } from './lib/firebase';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+} from "./data/initialData";
+import { Navbar, ActiveTab } from "./components/Navbar";
+import { ChatInterface } from "./components/ChatInterface";
+import { ProfileSettings } from "./components/ProfileSettings";
+import { RecipeBook } from "./components/RecipeBook";
+import { MealPlanner } from "./components/MealPlanner";
+import { PantryInventory } from "./components/PantryInventory";
+import { AdHocOverrideModal } from "./components/AdHocOverrideModal";
+import { AuthModal } from "./components/AuthModal";
+import { auth } from "./lib/firebase";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import {
   subscribeToUserRecipes,
   saveRecipeToFirestore,
@@ -31,17 +37,25 @@ import {
   getUserProfileFromFirestore,
   saveAdHocOverrideToFirestore,
   getAdHocOverrideFromFirestore,
-} from './services/firestoreService';
+  subscribeToDietProfiles,
+  saveDietProfileToFirestore,
+  deleteDietProfileFromFirestore,
+  initializeDefaultDietProfiles,
+} from "./services/firestoreService";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('chat');
+  const [activeTab, setActiveTab] = useState<ActiveTab>("chat");
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // User-scoped state initialized without localStorage reliance
   const [profiles, setProfiles] = useState<UserProfile[]>(DEFAULT_PROFILES);
-  const [currentProfile, setCurrentProfile] = useState<UserProfile>(DEFAULT_PROFILES[0]);
-  const [adHocOverride, setAdHocOverride] = useState<AdHocOverride>(INITIAL_AD_HOC_OVERRIDE);
+  const [currentProfile, setCurrentProfile] = useState<UserProfile>(
+    DEFAULT_PROFILES[0],
+  );
+  const [adHocOverride, setAdHocOverride] = useState<AdHocOverride>(
+    INITIAL_AD_HOC_OVERRIDE,
+  );
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const [mealPlan, setMealPlan] = useState<MealPlanEntry[]>([]);
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
@@ -52,36 +66,63 @@ export default function App() {
     let unsubRecipes: (() => void) | null = null;
     let unsubMealPlan: (() => void) | null = null;
     let unsubPantry: (() => void) | null = null;
+    let unsubDietProfiles: (() => void) | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setAuthUser(user);
 
       // Clean up prior subscriptions
-      if (unsubRecipes) { unsubRecipes(); unsubRecipes = null; }
-      if (unsubMealPlan) { unsubMealPlan(); unsubMealPlan = null; }
-      if (unsubPantry) { unsubPantry(); unsubPantry = null; }
+      if (unsubRecipes) {
+        unsubRecipes();
+        unsubRecipes = null;
+      }
+      if (unsubMealPlan) {
+        unsubMealPlan();
+        unsubMealPlan = null;
+      }
+      if (unsubPantry) {
+        unsubPantry();
+        unsubPantry = null;
+      }
+      if (unsubDietProfiles) {
+        unsubDietProfiles();
+        unsubDietProfiles = null;
+      }
 
       if (user) {
         // Synchronize Firestore data for the logged-in user under users/{user.uid}/...
-        const firestoreProfile = await getUserProfileFromFirestore(user.uid);
-        if (firestoreProfile) {
-          setCurrentProfile(firestoreProfile);
-        } else {
-          // Initialize and save profile settings under users/{user.uid}/profile/settings
-          const defaultProf = profiles.find((p) => p.name === 'Balanced') || profiles[0] || DEFAULT_PROFILES[0];
-          const initialUserProf: UserProfile = {
-            ...defaultProf,
-            id: user.uid,
-            email: user.email || 'user@pantrypal.app',
-          };
-          saveUserProfileToFirestore(user.uid, initialUserProf);
-          setCurrentProfile(initialUserProf);
-        }
-
         const firestoreAdHoc = await getAdHocOverrideFromFirestore(user.uid);
         if (firestoreAdHoc) {
           setAdHocOverride(firestoreAdHoc);
         }
+
+        // Real-time Firestore subscription for diet profiles & system prompts
+        let initializedDefaults = false;
+        unsubDietProfiles = subscribeToDietProfiles(
+          user.uid,
+          async (fetchedProfiles) => {
+            if (fetchedProfiles.length === 0 && !initializedDefaults) {
+              initializedDefaults = true;
+              // First time user: save default system prompts and diet profiles under their account in Firebase
+              await initializeDefaultDietProfiles(user.uid, DEFAULT_PROFILES);
+              const activeProf = DEFAULT_PROFILES[0];
+              await saveUserProfileToFirestore(user.uid, activeProf);
+              setProfiles(DEFAULT_PROFILES);
+              setCurrentProfile(activeProf);
+            } else if (fetchedProfiles.length > 0) {
+              setProfiles(fetchedProfiles);
+              const activeSaved = await getUserProfileFromFirestore(user.uid);
+              if (activeSaved) {
+                const matchedInFetched =
+                  fetchedProfiles.find((p) => p.id === activeSaved.id) ||
+                  fetchedProfiles.find((p) => p.name === activeSaved.name);
+                setCurrentProfile(matchedInFetched || activeSaved);
+              } else {
+                setCurrentProfile(fetchedProfiles[0]);
+              }
+            }
+          },
+        );
 
         // Real-time Firestore subscriptions for recipes, meal plans, and pantry items
         unsubRecipes = subscribeToUserRecipes(user.uid, (recipes) => {
@@ -100,6 +141,7 @@ export default function App() {
         setSavedRecipes([]);
         setMealPlan([]);
         setPantryItems([]);
+        setProfiles(DEFAULT_PROFILES);
         setCurrentProfile(DEFAULT_PROFILES[0]);
         setAdHocOverride(INITIAL_AD_HOC_OVERRIDE);
       }
@@ -109,11 +151,19 @@ export default function App() {
       if (unsubRecipes) unsubRecipes();
       if (unsubMealPlan) unsubMealPlan();
       if (unsubPantry) unsubPantry();
+      if (unsubDietProfiles) unsubDietProfiles();
       unsubscribeAuth();
     };
   }, []);
 
   // Handlers with strict authentication checks
+  const handleSelectProfile = (profile: UserProfile) => {
+    setCurrentProfile(profile);
+    if (auth.currentUser) {
+      saveUserProfileToFirestore(auth.currentUser.uid, profile);
+    }
+  };
+
   const handleSaveRecipe = (recipe: Recipe) => {
     // Intercept action if user is not signed in
     if (!auth.currentUser) {
@@ -126,9 +176,13 @@ export default function App() {
     saveRecipeToFirestore(currentUserId, recipe);
 
     setSavedRecipes((prev) => {
-      const exists = prev.some((r) => r.id === recipe.id || r.title === recipe.title);
+      const exists = prev.some(
+        (r) => r.id === recipe.id || r.title === recipe.title,
+      );
       if (exists) {
-        return prev.map((r) => (r.id === recipe.id || r.title === recipe.title ? recipe : r));
+        return prev.map((r) =>
+          r.id === recipe.id || r.title === recipe.title ? recipe : r,
+        );
       }
       return [recipe, ...prev];
     });
@@ -152,8 +206,11 @@ export default function App() {
     }
 
     const currentUserId = auth.currentUser.uid;
-    setProfiles((prev) => prev.map((p) => (p.id === updatedProfile.id ? updatedProfile : p)));
+    setProfiles((prev) =>
+      prev.map((p) => (p.id === updatedProfile.id ? updatedProfile : p)),
+    );
     setCurrentProfile(updatedProfile);
+    saveDietProfileToFirestore(currentUserId, updatedProfile);
     saveUserProfileToFirestore(currentUserId, updatedProfile);
   };
 
@@ -166,6 +223,7 @@ export default function App() {
     const currentUserId = auth.currentUser.uid;
     setProfiles((prev) => [...prev, newProfile]);
     setCurrentProfile(newProfile);
+    saveDietProfileToFirestore(currentUserId, newProfile);
     saveUserProfileToFirestore(currentUserId, newProfile);
   };
 
@@ -176,10 +234,14 @@ export default function App() {
     }
 
     if (profiles.length <= 1) return;
+    const currentUserId = auth.currentUser.uid;
+    deleteDietProfileFromFirestore(currentUserId, profileId);
+
     setProfiles((prev) => {
       const updated = prev.filter((p) => p.id !== profileId);
       if (currentProfile.id === profileId && updated.length > 0) {
         setCurrentProfile(updated[0]);
+        saveUserProfileToFirestore(currentUserId, updated[0]);
       }
       return updated;
     });
@@ -196,7 +258,11 @@ export default function App() {
     saveMealPlanEntryToFirestore(currentUserId, entry);
   };
 
-  const handleScheduleRecipe = (recipe: Recipe, selectedDays: string[], mealType: string) => {
+  const handleScheduleRecipe = (
+    recipe: Recipe,
+    selectedDays: string[],
+    mealType: string,
+  ) => {
     if (!auth.currentUser) {
       setIsAuthModalOpen(true);
       return;
@@ -267,7 +333,7 @@ export default function App() {
   };
 
   const handleCookWithPantry = (selectedIngredients: string[]) => {
-    setActiveTab('chat');
+    setActiveTab("chat");
   };
 
   return (
@@ -278,7 +344,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         profiles={profiles}
         currentProfile={currentProfile}
-        setCurrentProfile={setCurrentProfile}
+        setCurrentProfile={handleSelectProfile}
         adHocOverride={adHocOverride}
         onOpenAdHocModal={() => setIsAdHocModalOpen(true)}
         savedRecipesCount={savedRecipes.length}
@@ -289,7 +355,7 @@ export default function App() {
 
       {/* Main Tab Content */}
       <main className="pb-12">
-        {activeTab === 'chat' && (
+        {activeTab === "chat" && (
           <ChatInterface
             userProfile={currentProfile}
             adHocOverride={adHocOverride}
@@ -297,7 +363,7 @@ export default function App() {
             onSaveRecipe={handleSaveRecipe}
             savedRecipes={savedRecipes}
             onAddToMealPlan={(rec) => {
-              handleScheduleRecipe(rec, ['Monday'], 'Dinner');
+              handleScheduleRecipe(rec, ["Monday"], "Dinner");
             }}
             onScheduleRecipe={handleScheduleRecipe}
             authUser={authUser}
@@ -305,14 +371,14 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'recipe_book' && (
+        {activeTab === "recipe_book" && (
           <RecipeBook
             recipes={savedRecipes}
             userProfile={currentProfile}
             onDeleteRecipe={handleDeleteRecipe}
             onSaveRecipe={handleSaveRecipe}
             onAddToMealPlan={(rec) => {
-              handleScheduleRecipe(rec, ['Monday'], 'Dinner');
+              handleScheduleRecipe(rec, ["Monday"], "Dinner");
             }}
             onScheduleRecipe={handleScheduleRecipe}
             authUser={authUser}
@@ -320,20 +386,20 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'profile' && (
+        {activeTab === "profile" && (
           <ProfileSettings
             profiles={profiles}
             currentProfile={currentProfile}
             onUpdateProfile={handleUpdateProfile}
             onCreateProfile={handleCreateProfile}
-            onSelectProfile={setCurrentProfile}
+            onSelectProfile={handleSelectProfile}
             onDeleteProfile={handleDeleteProfile}
             authUser={authUser}
             onOpenAuthModal={() => setIsAuthModalOpen(true)}
           />
         )}
 
-        {activeTab === 'planner' && (
+        {activeTab === "planner" && (
           <MealPlanner
             mealPlan={mealPlan}
             savedRecipes={savedRecipes}
@@ -344,7 +410,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'pantry' && (
+        {activeTab === "pantry" && (
           <PantryInventory
             items={pantryItems}
             onAddItem={handleAddPantryItem}
@@ -372,4 +438,3 @@ export default function App() {
     </div>
   );
 }
-
