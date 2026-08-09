@@ -31,12 +31,9 @@ function getGeminiClient(): GoogleGenAI {
     // Fallback to your hardcoded key if process.env.GEMINI_API_KEY is missing
     const apiKey =
       process.env.GEMINI_API_KEY ||
-      "AQ.Ab8RN6KUgA5uNrbHXZzts_BTA_Oj1jnp3dSRCiSKxrJueM-r4w";
+      "AQ.Ab8RN6I3-2mRXPRkuhGNhldpHSzQVP7TggaiO1MxdQZqSBA4Ig";
 
-    if (
-      !apiKey ||
-      apiKey === "AQ.Ab8RN6KUgA5uNrbHXZzts_BTA_Oj1jnp3dSRCiSKxrJueM-r4w"
-    ) {
+    if (!apiKey ) {
       throw new Error(
         "GEMINI_API_KEY environment variable is not set and fallback is missing.",
       );
