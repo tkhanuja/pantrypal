@@ -348,31 +348,40 @@ async function setupApp() {
       try {
         let html = fs.readFileSync(indexPath, "utf8");
 
-        // Replace placeholders with runtime Cloud Run environment variables
+        // Debug log to check container environment variables
+        console.log(
+          "[Server Debug] Injecting API Key:",
+          process.env.VITE_FIREBASE_API_KEY ? "Present" : "MISSING",
+        );
+
         html = html
           .replace(
             /%VITE_FIREBASE_API_KEY%/g,
-            process.env.VITE_FIREBASE_API_KEY || "",
+            process.env.VITE_FIREBASE_API_KEY ||
+              "AIzaSyAO3xx6mnITcD9h6GDk7qhzpQMvSiswSVk",
           )
           .replace(
             /%VITE_FIREBASE_AUTH_DOMAIN%/g,
-            process.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+            process.env.VITE_FIREBASE_AUTH_DOMAIN ||
+              "pantry-pal-66ed8.firebaseapp.com",
           )
           .replace(
             /%VITE_FIREBASE_PROJECT_ID%/g,
-            process.env.VITE_FIREBASE_PROJECT_ID || "",
+            process.env.VITE_FIREBASE_PROJECT_ID || "pantry-pal-66ed8",
           )
           .replace(
             /%VITE_FIREBASE_STORAGE_BUCKET%/g,
-            process.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+            process.env.VITE_FIREBASE_STORAGE_BUCKET ||
+              "pantry-pal-66ed8.firebasestorage.app",
           )
           .replace(
             /%VITE_FIREBASE_MESSAGING_SENDER_ID%/g,
-            process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+            process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "557285061653",
           )
           .replace(
             /%VITE_FIREBASE_APP_ID%/g,
-            process.env.VITE_FIREBASE_APP_ID || "",
+            process.env.VITE_FIREBASE_APP_ID ||
+              "1:557285061653:web:d777e9405d61032bab8a1c",
           );
 
         res.setHeader("Content-Type", "text/html");

@@ -30,22 +30,32 @@ declare global {
 
 const firebaseConfig = {
   apiKey:
-    window.__FIREBASE_CONFIG__?.apiKey || import.meta.env.VITE_FIREBASE_API_KEY,
+    window.__FIREBASE_CONFIG__?.apiKey ||
+    import.meta.env.VITE_FIREBASE_API_KEY ||
+    "AIzaSyAO3xx6mnITcD9h6GDk7qhzpQMvSiswSVk",
   authDomain:
     window.__FIREBASE_CONFIG__?.authDomain ||
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ||
+    "pantry-pal-66ed8.firebaseapp.com",
   projectId:
     window.__FIREBASE_CONFIG__?.projectId ||
-    import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    import.meta.env.VITE_FIREBASE_PROJECT_ID ||
+    "pantry-pal-66ed8",
   storageBucket:
     window.__FIREBASE_CONFIG__?.storageBucket ||
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
+    "pantry-pal-66ed8.firebasestorage.app",
   messagingSenderId:
     window.__FIREBASE_CONFIG__?.messagingSenderId ||
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ||
+    "557285061653",
   appId:
-    window.__FIREBASE_CONFIG__?.appId || import.meta.env.VITE_FIREBASE_APP_ID,
+    window.__FIREBASE_CONFIG__?.appId ||
+    import.meta.env.VITE_FIREBASE_APP_ID ||
+    "1:557285061653:web:d777e9405d61032bab8a1c",
 };
+
+export { firebaseConfig };
 console.log("DEBUG API KEY:", import.meta.env.VITE_FIREBASE_API_KEY);
 const app =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
