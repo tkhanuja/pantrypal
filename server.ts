@@ -24,28 +24,44 @@ const indexPath = path.join(distPath, "index.html");
 
 app.use(express.json({ limit: "10mb" }));
 
-// Lazy initializer for Gemini client to prevent crash if key is missing on startup
-let aiClient: GoogleGenAI | null = null;
-function getGeminiClient(): GoogleGenAI {
-  if (!aiClient) {
-    // Fallback to your hardcoded key if process.env.GEMINI_API_KEY is missing
-    const apiKey = "AQ.Ab8RN6I3-2mRXPRkuhGNhldpHSzQVP7TggaiO1MxdQZqSBA4Ig";
 
-    if (!apiKey ) {
-      throw new Error(
-        "GEMINI_API_KEY environment variable is not set and fallback is missing.",
-      );
+async function generateWithGeminiDirect(promptText: string) {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  async function getGeminiClient() {
+  // We use direct fetch instead of the SDK because AQ. tokens 
+  // require an explicit Bearer credential to prevent 401 errors.
+  return {
+    models: {
+      generateContent: async (params: { model: string; contents: any }) => {
+        const apiKey = "AQ.Ab8RN6I3-2mRXPRkuhGNhldpHSzQVP7TggaiO1MxdQZqSBA4Ig";
+        
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${params.model}:generateContent`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              contents: params.contents,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+        }
+
+        const data = await response.json();
+        return {
+          text: data.candidates?.[0]?.content?.parts?.[0]?.text || ""
+        };
+      }
     }
-    aiClient = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
-        },
-      },
-    });
-  }
-  return aiClient;
+  };
 }
 
 // 1. Health Endpoint
