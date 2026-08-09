@@ -28,10 +28,17 @@ app.use(express.json({ limit: "10mb" }));
 let aiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI {
   if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    // Fallback to your hardcoded key if process.env.GEMINI_API_KEY is missing
+    const apiKey =
+      process.env.GEMINI_API_KEY ||
+      "AQ.Ab8RN6KUgA5uNrbHXZzts_BTA_Oj1jnp3dSRCiSKxrJueM-r4w";
+
+    if (
+      !apiKey ||
+      apiKey === "AQ.Ab8RN6KUgA5uNrbHXZzts_BTA_Oj1jnp3dSRCiSKxrJueM-r4w"
+    ) {
       throw new Error(
-        "GEMINI_API_KEY environment variable is not set in Secrets.",
+        "GEMINI_API_KEY environment variable is not set and fallback is missing.",
       );
     }
     aiClient = new GoogleGenAI({
