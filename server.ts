@@ -176,7 +176,6 @@ You MUST respond with a single JSON object containing:
     const jsonText = geminiResponse.text?.trim() || "{}";
     let parsedResult;
     try {
-      // Clean up markdown code blocks if the model wrapped output
       const cleanJson = jsonText
         .replace(/^```json\s*/i, "")
         .replace(/^```\s*/, "")
@@ -255,7 +254,7 @@ app.post("/api/recipe/parse-macro", async (req, res) => {
     const ai = await getGeminiClient();
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       contents: [
         {
           role: "user",
@@ -302,10 +301,8 @@ async function setupApp() {
       `[PantryPal Server] Serving production static files from: ${distPath}`,
     );
 
-    // Serve static assets normally without auto-serving index.html
     app.use(express.static(distPath, { index: false }));
 
-    // Intercept client-side routing to inject runtime environment variables securely
     app.get("*", (req, res) => {
       if (!fs.existsSync(indexPath)) {
         return res
