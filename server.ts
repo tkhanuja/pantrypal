@@ -29,9 +29,7 @@ let aiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI {
   if (!aiClient) {
     // Fallback to your hardcoded key if process.env.GEMINI_API_KEY is missing
-    const apiKey =
-      process.env.GEMINI_API_KEY ||
-      "AQ.Ab8RN6I3-2mRXPRkuhGNhldpHSzQVP7TggaiO1MxdQZqSBA4Ig";
+    const apiKey = "AQ.Ab8RN6I3-2mRXPRkuhGNhldpHSzQVP7TggaiO1MxdQZqSBA4Ig";
 
     if (!apiKey ) {
       throw new Error(
