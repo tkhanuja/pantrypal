@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { Type } from "@google/genai";
+import OpenAI from "openai";
 import { createServer as createViteServer } from "vite";
 import { getFoodPhotoFallback as getFoodPhotoFallbackLib } from "./src/lib/foodPhotos";
 import fs from "fs";
@@ -10,6 +10,12 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT) || 8080;
+
+// Initialize Groq client (uses OpenAI-compatible SDK)
+const groq = new OpenAI({
+  apiKey: "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",
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
 // Resolve distribution path safely
 const possibleDistPaths = [
@@ -24,69 +30,12 @@ const indexPath = path.join(distPath, "index.html");
 
 app.use(express.json({ limit: "10mb" }));
 
-async function getGeminiClient() {
-  return {
-    models: {
-      generateContent: async (params: {
-        model: string;
-        contents: any;
-        config?: any;
-      }) => {
-        const apiKey =
-          process.env.GEMINI_API_KEY ||
-          "AQ.Ab8RN6I3-2mRXPRkuhGNhldpHSzQVP7TggaiO1MxdQZqSBA4Ig";
-
-        let payloadContents = params.contents;
-        if (params.config?.systemInstruction) {
-          payloadContents = [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `[System Instruction]\n${params.config.systemInstruction}`,
-                },
-              ],
-            },
-            ...params.contents,
-          ];
-        }
-
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${params.model}:generateContent`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey,
-            },
-            body: JSON.stringify({
-              contents: payloadContents,
-            }),
-          },
-        );
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Gemini API error (${response.status}): ${errorText}`,
-          );
-        }
-
-        const data = await response.json();
-        return {
-          text: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
-        };
-      },
-    },
-  };
-}
-
 // 1. Health Endpoint
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     service: "PantryPal Express API",
-    geminiKeyConfigured: !!process.env.GEMINI_API_KEY,
+    groqKeyConfigured: !!process.env.GROQ_API_KEY,
   });
 });
 
@@ -98,8 +47,6 @@ app.post("/api/chat/recipe", async (req, res) => {
     if (!prompt) {
       return res.status(400).json({ error: "Prompt is required" });
     }
-
-    const ai = await getGeminiClient();
 
     let systemInstruction = `You are PantryPal, an expert AI master chef, culinary scientist, and precision nutritionist.
 Your goal is to engineer personalized recipes and engage in interactive culinary dialogue.
@@ -127,7 +74,7 @@ Note: The user has applied a temporary scenario override for this session. Overr
     }
 
     systemInstruction += `\nRESPONSE STRUCTURE MANDATE:
-You MUST respond with a single JSON object containing:
+You MUST respond with a single valid JSON object containing:
 1. "message": A warm, encouraging chef dialogue explaining the dish, culinary choices, flavor pairing logic, and macro benefits.
 2. "recipe": (Optional, but mandatory whenever a recipe is requested or refined) A detailed recipe object with:
    - "title": string
@@ -144,43 +91,30 @@ You MUST respond with a single JSON object containing:
 3. "suggestedFollowUps": array of 3 short, actionable refinement prompts.
 `;
 
-    const contents: any[] = [];
+    const messages: any[] = [{ role: "system", content: systemInstruction }];
+
     for (const msg of history) {
-      contents.push({
-        role: msg.role === "assistant" ? "model" : "user",
-        parts: [
-          {
-            text:
-              typeof msg.content === "string"
-                ? msg.content
-                : JSON.stringify(msg.content),
-          },
-        ],
+      messages.push({
+        role: msg.role === "assistant" ? "assistant" : "user",
+        content:
+          typeof msg.content === "string"
+            ? msg.content
+            : JSON.stringify(msg.content),
       });
     }
 
-    contents.push({
-      role: "user",
-      parts: [{ text: prompt }],
+    messages.push({ role: "user", content: prompt });
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages,
+      response_format: { type: "json_object" },
     });
 
-    const geminiResponse = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
-      contents,
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-      },
-    });
-
-    const jsonText = geminiResponse.text?.trim() || "{}";
+    const jsonText = completion.choices[0].message.content || "{}";
     let parsedResult;
     try {
-      const cleanJson = jsonText
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/, "")
-        .replace(/\s*```$/, "");
-      parsedResult = JSON.parse(cleanJson);
+      parsedResult = JSON.parse(jsonText);
       if (parsedResult.recipe) {
         const title = parsedResult.recipe.title || "Delicious Meal";
         const cleanTitle =
@@ -188,13 +122,12 @@ You MUST respond with a single JSON object containing:
         const promptTitle = encodeURIComponent(
           `photo of delicious ${cleanTitle}, gourmet food photography, restaurant presentation`,
         );
-        parsedResult.recipe.imageUrl = `[https://image.pollinations.ai/prompt/$](https://image.pollinations.ai/prompt/$){promptTitle}?width=800&height=600&nologo=true`;
+        parsedResult.recipe.imageUrl = `https://image.pollinations.ai/prompt/${promptTitle}?width=800&height=600&nologo=true`;
       }
     } catch (e) {
-      console.error("Failed to parse Gemini JSON output:", jsonText);
+      console.error("Failed to parse Groq JSON output:", jsonText);
       parsedResult = {
-        message:
-          geminiResponse.text || "Here is a recipe tailored to your request.",
+        message: jsonText || "Here is a recipe tailored to your request.",
         suggestedFollowUps: [
           "Make it under 20 minutes",
           "Increase protein",
@@ -232,7 +165,7 @@ app.post("/api/recipe/generate-image", async (req, res) => {
     const promptTitle = encodeURIComponent(
       `photo of delicious ${cleanTitle}, gourmet food photography, restaurant presentation`,
     );
-    const imageUrl = `[https://image.pollinations.ai/prompt/$](https://image.pollinations.ai/prompt/$){promptTitle}?width=800&height=600&nologo=true&seed=${seed}`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${promptTitle}?width=800&height=600&nologo=true&seed=${seed}`;
 
     return res.json({ success: true, imageUrl });
   } catch (error: any) {
@@ -251,30 +184,20 @@ app.post("/api/recipe/generate-image", async (req, res) => {
 app.post("/api/recipe/parse-macro", async (req, res) => {
   try {
     const { ingredientsText } = req.body;
-    const ai = await getGeminiClient();
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
-      contents: [
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
         {
           role: "user",
-          parts: [
-            {
-              text: `Calculate exact per-serving macro and micro nutritional breakdown for the following ingredient list:\n${ingredientsText}\n\nRespond ONLY with JSON schema:\n{\n  "calories": number,\n  "protein": number,\n  "carbs": number,\n  "fats": number,\n  "fiber": number,\n  "sodium": number,\n  "sugar": number\}`,
-            },
-          ],
+          content: `Calculate exact per-serving macro and micro nutritional breakdown for the following ingredient list:\n${ingredientsText}\n\nRespond ONLY with a JSON schema object:\n{\n  "calories": number,\n  "protein": number,\n  "carbs": number,\n  "fats": number,\n  "fiber": number,\n  "sodium": number,\n  "sugar": number\n}`,
         },
       ],
-      config: {
-        responseMimeType: "application/json",
-      },
+      response_format: { type: "json_object" },
     });
 
-    const cleanJson = (response.text || "{}")
-      .replace(/^```json\s*/i, "")
-      .replace(/^```\s*/, "")
-      .replace(/\s*```$/, "");
-    const parsed = JSON.parse(cleanJson);
+    const jsonText = completion.choices[0].message.content || "{}";
+    const parsed = JSON.parse(jsonText);
     return res.json({ success: true, nutritionMacros: parsed });
   } catch (error: any) {
     console.error("API /api/recipe/parse-macro error:", error);
@@ -300,7 +223,6 @@ async function setupApp() {
     console.log(
       `[PantryPal Server] Serving production static files from: ${distPath}`,
     );
-
     app.use(express.static(distPath, { index: false }));
 
     app.get("*", (req, res) => {
@@ -314,11 +236,6 @@ async function setupApp() {
 
       try {
         let html = fs.readFileSync(indexPath, "utf8");
-
-        console.log(
-          "[Server Debug] Injecting API Key:",
-          process.env.VITE_FIREBASE_API_KEY ? "Present" : "MISSING",
-        );
 
         html = html
           .replace(
