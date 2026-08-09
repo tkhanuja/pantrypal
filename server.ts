@@ -25,8 +25,6 @@ const indexPath = path.join(distPath, "index.html");
 app.use(express.json({ limit: "10mb" }));
 
 async function getGeminiClient() {
-  // We use direct fetch instead of the SDK because AQ. tokens
-  // require an explicit Bearer credential to prevent 401 errors.
   return {
     models: {
       generateContent: async (params: {
@@ -38,7 +36,6 @@ async function getGeminiClient() {
           process.env.GEMINI_API_KEY ||
           "AQ.Ab8RN6I3-2mRXPRkuhGNhldpHSzQVP7TggaiO1MxdQZqSBA4Ig";
 
-        // Build contents payload including system instruction if provided
         let payloadContents = params.contents;
         if (params.config?.systemInstruction) {
           payloadContents = [
@@ -60,7 +57,7 @@ async function getGeminiClient() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
+              "x-goog-api-key": apiKey,
             },
             body: JSON.stringify({
               contents: payloadContents,
