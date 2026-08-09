@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 import { getFoodPhotoFallback as getFoodPhotoFallbackLib } from "./src/lib/foodPhotos";
 import fs from "fs";
@@ -24,43 +24,63 @@ const indexPath = path.join(distPath, "index.html");
 
 app.use(express.json({ limit: "10mb" }));
 
-
-async function generateWithGeminiDirect(promptText: string) {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  async function getGeminiClient() {
-  // We use direct fetch instead of the SDK because AQ. tokens 
+async function getGeminiClient() {
+  // We use direct fetch instead of the SDK because AQ. tokens
   // require an explicit Bearer credential to prevent 401 errors.
   return {
     models: {
-      generateContent: async (params: { model: string; contents: any }) => {
-        const apiKey = "AQ.Ab8RN6I3-2mRXPRkuhGNhldpHSzQVP7TggaiO1MxdQZqSBA4Ig";
-        
+      generateContent: async (params: {
+        model: string;
+        contents: any;
+        config?: any;
+      }) => {
+        const apiKey =
+          process.env.GEMINI_API_KEY ||
+          "AQ.Ab8RN6I3-2mRXPRkuhGNhldpHSzQVP7TggaiO1MxdQZqSBA4Ig";
+
+        // Build contents payload including system instruction if provided
+        let payloadContents = params.contents;
+        if (params.config?.systemInstruction) {
+          payloadContents = [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `[System Instruction]\n${params.config.systemInstruction}`,
+                },
+              ],
+            },
+            ...params.contents,
+          ];
+        }
+
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${params.model}:generateContent`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${apiKey}`,
+              Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              contents: params.contents,
+              contents: payloadContents,
             }),
-          }
+          },
         );
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+          throw new Error(
+            `Gemini API error (${response.status}): ${errorText}`,
+          );
         }
 
         const data = await response.json();
         return {
-          text: data.candidates?.[0]?.content?.parts?.[0]?.text || ""
+          text: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
         };
-      }
-    }
+      },
+    },
   };
 }
 
@@ -82,7 +102,7 @@ app.post("/api/chat/recipe", async (req, res) => {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    const ai = getGeminiClient();
+    const ai = await getGeminiClient();
 
     let systemInstruction = `You are PantryPal, an expert AI master chef, culinary scientist, and precision nutritionist.
 Your goal is to engineer personalized recipes and engage in interactive culinary dialogue.
@@ -148,89 +168,23 @@ You MUST respond with a single JSON object containing:
     });
 
     const geminiResponse = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-2.5-flash",
       contents,
       config: {
         systemInstruction,
         responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            message: { type: Type.STRING },
-            suggestedFollowUps: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-            },
-            recipe: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                description: { type: Type.STRING },
-                prepTime: { type: Type.NUMBER },
-                cookTime: { type: Type.NUMBER },
-                servings: { type: Type.NUMBER },
-                difficulty: { type: Type.STRING },
-                dietaryTags: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                },
-                ingredients: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      item: { type: Type.STRING },
-                      amount: { type: Type.NUMBER },
-                      unit: { type: Type.STRING },
-                      category: { type: Type.STRING },
-                      notes: { type: Type.STRING },
-                    },
-                    required: ["item", "amount", "unit"],
-                  },
-                },
-                instructions: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                },
-                nutritionMacros: {
-                  type: Type.OBJECT,
-                  properties: {
-                    calories: { type: Type.NUMBER },
-                    protein: { type: Type.NUMBER },
-                    carbs: { type: Type.NUMBER },
-                    fats: { type: Type.NUMBER },
-                    fiber: { type: Type.NUMBER },
-                    sodium: { type: Type.NUMBER },
-                    sugar: { type: Type.NUMBER },
-                  },
-                  required: ["calories", "protein", "carbs", "fats", "fiber"],
-                },
-                chefTips: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                },
-              },
-              required: [
-                "title",
-                "description",
-                "prepTime",
-                "cookTime",
-                "servings",
-                "ingredients",
-                "instructions",
-                "nutritionMacros",
-              ],
-            },
-          },
-          required: ["message"],
-        },
       },
     });
 
     const jsonText = geminiResponse.text?.trim() || "{}";
     let parsedResult;
     try {
-      parsedResult = JSON.parse(jsonText);
+      // Clean up markdown code blocks if the model wrapped output
+      const cleanJson = jsonText
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/, "");
+      parsedResult = JSON.parse(cleanJson);
       if (parsedResult.recipe) {
         const title = parsedResult.recipe.title || "Delicious Meal";
         const cleanTitle =
@@ -238,7 +192,7 @@ You MUST respond with a single JSON object containing:
         const promptTitle = encodeURIComponent(
           `photo of delicious ${cleanTitle}, gourmet food photography, restaurant presentation`,
         );
-        parsedResult.recipe.imageUrl = `https://image.pollinations.ai/prompt/${promptTitle}?width=800&height=600&nologo=true`;
+        parsedResult.recipe.imageUrl = `[https://image.pollinations.ai/prompt/$](https://image.pollinations.ai/prompt/$){promptTitle}?width=800&height=600&nologo=true`;
       }
     } catch (e) {
       console.error("Failed to parse Gemini JSON output:", jsonText);
@@ -282,7 +236,7 @@ app.post("/api/recipe/generate-image", async (req, res) => {
     const promptTitle = encodeURIComponent(
       `photo of delicious ${cleanTitle}, gourmet food photography, restaurant presentation`,
     );
-    const imageUrl = `https://image.pollinations.ai/prompt/${promptTitle}?width=800&height=600&nologo=true&seed=${seed}`;
+    const imageUrl = `[https://image.pollinations.ai/prompt/$](https://image.pollinations.ai/prompt/$){promptTitle}?width=800&height=600&nologo=true&seed=${seed}`;
 
     return res.json({ success: true, imageUrl });
   } catch (error: any) {
@@ -301,29 +255,30 @@ app.post("/api/recipe/generate-image", async (req, res) => {
 app.post("/api/recipe/parse-macro", async (req, res) => {
   try {
     const { ingredientsText } = req.body;
-    const ai = getGeminiClient();
+    const ai = await getGeminiClient();
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
-      contents: `Calculate exact per-serving macro and micro nutritional breakdown for the following ingredient list:
-${ingredientsText}
-
-Respond ONLY with JSON schema:
-{
-  "calories": number,
-  "protein": number,
-  "carbs": number,
-  "fats": number,
-  "fiber": number,
-  "sodium": number,
-  "sugar": number
-}`,
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `Calculate exact per-serving macro and micro nutritional breakdown for the following ingredient list:\n${ingredientsText}\n\nRespond ONLY with JSON schema:\n{\n  "calories": number,\n  "protein": number,\n  "carbs": number,\n  "fats": number,\n  "fiber": number,\n  "sodium": number,\n  "sugar": number\}`,
+            },
+          ],
+        },
+      ],
       config: {
         responseMimeType: "application/json",
       },
     });
 
-    const parsed = JSON.parse(response.text?.trim() || "{}");
+    const cleanJson = (response.text || "{}")
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/, "")
+      .replace(/\s*```$/, "");
+    const parsed = JSON.parse(cleanJson);
     return res.json({ success: true, nutritionMacros: parsed });
   } catch (error: any) {
     console.error("API /api/recipe/parse-macro error:", error);
@@ -366,7 +321,6 @@ async function setupApp() {
       try {
         let html = fs.readFileSync(indexPath, "utf8");
 
-        // Debug log to check container environment variables
         console.log(
           "[Server Debug] Injecting API Key:",
           process.env.VITE_FIREBASE_API_KEY ? "Present" : "MISSING",
